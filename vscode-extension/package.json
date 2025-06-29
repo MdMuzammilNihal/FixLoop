@@ -1,0 +1,121 @@
+{
+  "name": "openfix-pro-vscode",
+  "displayName": "OpenFix Pro",
+  "description": "AI-powered code analysis, bug fixing, and optimization for VS Code",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters",
+    "Debuggers"
+  ],
+  "activationEvents": [
+    "onCommand:openfix-pro.analyzeCode",
+    "onCommand:openfix-pro.fixCode",
+    "onCommand:openfix-pro.optimizeCode",
+    "onCommand:openfix-pro.executeCode"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "openfix-pro.analyzeCode",
+        "title": "OpenFix Pro: Analyze Code"
+      },
+      {
+        "command": "openfix-pro.fixCode",
+        "title": "OpenFix Pro: Fix Code"
+      },
+      {
+        "command": "openfix-pro.optimizeCode",
+        "title": "OpenFix Pro: Optimize Code"
+      },
+      {
+        "command": "openfix-pro.executeCode",
+        "title": "OpenFix Pro: Execute Code"
+      }
+    ],
+    "configuration": {
+      "title": "OpenFix Pro",
+      "properties": {
+        "openfix-pro.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:8000",
+          "description": "The URL of the OpenFix Pro server"
+        },
+        "openfix-pro.autoAnalyze": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically analyze code on save"
+        },
+        "openfix-pro.showInlineErrors": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show errors inline in the editor"
+        }
+      }
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "when": "editorHasSelection",
+          "command": "openfix-pro.analyzeCode",
+          "group": "openfix"
+        },
+        {
+          "when": "editorHasSelection",
+          "command": "openfix-pro.fixCode",
+          "group": "openfix"
+        },
+        {
+          "when": "editorHasSelection",
+          "command": "openfix-pro.optimizeCode",
+          "group": "openfix"
+        },
+        {
+          "when": "editorHasSelection && editorLangId == 'python'",
+          "command": "openfix-pro.executeCode",
+          "group": "openfix"
+        }
+      ]
+    },
+    "languages": [
+      {
+        "id": "python",
+        "extensions": [".py"]
+      },
+      {
+        "id": "javascript",
+        "extensions": [".js"]
+      },
+      {
+        "id": "typescript",
+        "extensions": [".ts"]
+      },
+      {
+        "id": "java",
+        "extensions": [".java"]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^16.11.7",
+    "@types/vscode": "^1.60.0",
+    "@typescript-eslint/eslint-plugin": "^5.3.1",
+    "@typescript-eslint/parser": "^5.3.1",
+    "eslint": "^8.2.0",
+    "typescript": "^4.5.2"
+  },
+  "dependencies": {
+    "axios": "^0.24.0"
+  }
+} 

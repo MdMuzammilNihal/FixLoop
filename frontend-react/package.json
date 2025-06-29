@@ -1,0 +1,35 @@
+{
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.7",
+    "@types/react": "^19.1.5",
+    "@types/react-dom": "^19.1.5",
+    "@types/react-tooltip": "^3.11.0",
+    "@types/uuid": "^10.0.0",
+    "@vitejs/plugin-react-swc": "^3.10.0",
+    "autoprefixer": "^10.4.21",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "diff": "^8.0.2",
+    "diff2html": "^3.4.51",
+    "dompurify": "^3.2.6",
+    "framer-motion": "^12.12.2",
+    "lucide-react": "^0.511.0",
+    "marked": "^15.0.12",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-hot-toast": "^2.5.2",
+    "react-tooltip": "^5.28.1",
+    "tailwindcss": "^4.1.7",
+    "uuid": "^11.1.0"
+  }
+}

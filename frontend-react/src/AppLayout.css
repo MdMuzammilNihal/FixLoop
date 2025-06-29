@@ -1,0 +1,149 @@
+/* AppLayout.css: Grid layout for the AI Code Assist app */
+.app-grid {
+  display: grid;
+  grid-template-columns: 280px 1.8fr 340px;
+  grid-template-rows: 1fr 160px;
+  grid-template-areas:
+    "sidebar-left main-center sidebar-right"
+    "bottom-panel bottom-panel bottom-panel";
+  height: 100vh;
+  width: 100vw;
+  background: #181c2a;
+  color: #f8f8f2;
+}
+.sidebar-left {
+  grid-area: sidebar-left;
+  background: #23283a;
+  border-right: 1px solid #22263a;
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+  max-width: 340px;
+  padding: 0;
+}
+.sidebar-section {
+  margin-bottom: 1.5rem;
+}
+.sidebar-section-title {
+  font-size: 1.08rem;
+  font-weight: 600;
+  color: #ffeb3b;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.5px;
+}
+.file-list, .dataset-list {
+  background: #23283a;
+  border-radius: 6px;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 1px 4px #0002;
+  min-height: 40px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+.file-item, .dataset-item {
+  padding: 0.3rem 0.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #f8f8f2;
+  transition: background 0.15s;
+}
+.file-item:hover, .dataset-item:hover {
+  background: #1e56a0;
+  color: #fff;
+}
+.add-btn {
+  background: #1e56a0;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.2rem 0.7rem;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.add-btn:hover {
+  background: #3a8dde;
+}
+.main-center {
+  grid-area: main-center;
+  display: flex;
+  flex-direction: column;
+  background: #181c2a;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+}
+.editor-container-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+.bottom-panel {
+  grid-area: bottom-panel;
+  background: #181c2a;
+  border-top: 1px solid #22263a;
+  min-height: 100px;
+  max-height: 180px;
+  overflow-y: auto;
+  box-shadow: 0 -2px 8px #000a;
+}
+.sidebar-header {
+  font-weight: bold;
+  font-size: 1.1rem;
+  padding: 1rem 1rem 0.5rem 1rem;
+  border-bottom: 1px solid #22263a;
+  background: #1a1e2d;
+  color: #ffeb3b;
+  letter-spacing: 1px;
+}
+.sidebar-content {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+}
+.placeholder {
+  color: #888;
+  font-style: italic;
+  text-align: center;
+  margin-top: 2rem;
+}
+.analysis-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.analysis-block {
+  background: #181c2a;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.98rem;
+  color: #f8f8f2;
+  box-shadow: 0 1px 4px #0002;
+  min-height: 48px;
+  white-space: pre-wrap;
+}
+@media (max-width: 1100px) {
+  .app-grid {
+    grid-template-columns: 1fr 2fr 1fr;
+    grid-template-rows: 1fr 220px;
+  }
+  .sidebar-left, .sidebar-right {
+    min-width: 120px;
+    max-width: 180px;
+  }
+}
+@media (max-width: 800px) {
+  .app-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "main-center"
+      "bottom-panel";
+  }
+  .sidebar-left, .sidebar-right {
+    display: none;
+  }
+} 

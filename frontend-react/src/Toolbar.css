@@ -1,0 +1,25 @@
+/* Toolbar horizontal layout and button polish */
+.toolbar-btn-group {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 8px;
+}
+.toolbar-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 2px;
+  min-width: 48px;
+}
+.toolbar-label {
+  font-size: 0.75rem;
+  color: #bbb;
+  margin-top: 2px;
+  text-align: center;
+  pointer-events: none;
+}
+.toolbar select.form-select {
+  margin-left: 8px;
+  min-width: 90px;
+} 
