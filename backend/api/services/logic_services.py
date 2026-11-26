@@ -787,9 +787,13 @@ async def fix_code(code: str, language: str, extra_context: str = ""):
         "- Make the smallest change that fixes the bug. Keep function names, signatures and all other behavior unchanged.\n"
         "- Do not add features, validation, type checks or comments that are not needed to fix the bug.\n"
         "- If the code crashes on some input (for example an empty list or a missing key), handle that case gracefully.\n"
+        "- Work out what the code is supposed to do from its names and the example call, then check it against that intent. "
+        "Typical logic bugs: off-by-one in ranges, loop bounds and comparisons; a wrong constant or operator; a missing or extra character in a literal; "
+        "a missing case such as an empty input, a single element, or repeated separators.\n"
+        "- If the code can raise an exception on bad input, catch it and return a sensible value instead of letting it propagate.\n"
         "- Return the complete fixed code, not a fragment.\n\n"
         "Answer in exactly this format:\n"
-        "Explanation:\n<one to three sentences>\n\n"
+        "Explanation:\n<say what the code should do, trace it on one small example to find where it goes wrong, then name the bug; two to four sentences>\n\n"
         f"Fixed Code:\n```{language}\n<complete fixed code>\n```\n"
     )
     findings = python_lint(code) if language.lower() == "python" else []

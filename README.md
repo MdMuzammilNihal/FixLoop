@@ -10,7 +10,7 @@ failure the error is sent back to the model for another attempt, up to 3 tries.
 
 - Python 3.10+, Node.js 18+
 - [Ollama](https://ollama.com/download) with the `llama3` model
-- Docker (optional, for the in-browser Python terminal)
+- Docker (optional, for the in-browser Python terminal; the first use needs the `python:3.10` image, about 1.6 GB: `docker pull python:3.10`)
 
 ```bash
 ollama pull llama3
@@ -53,6 +53,7 @@ docker compose -f docker/docker-compose.yml exec ollama ollama pull llama3
 | `POST /api/code` | `action`: `analyze`, `optimize`, `hint`, `fix`, `execute`. `verify_execution: true` also runs each fix |
 | `POST /api/code/stream` | Streamed (JSON lines) analyze/optimize/fix/hint |
 | `POST /api/code/batch` | Several snippets in one call |
+| `POST /api/chat` | Free-form question about your code, streamed as plain text (powers the AI Chat panel) |
 | `POST /api/code/fix-with-context` | Fix using `context`, `error_message`, `dependencies` |
 | `POST /api/ide/analyze` | Editor-oriented variant with inline diagnostics |
 | `GET /api/cache/stats`, `POST /api/cache/save`, `POST /api/cache/clear` | LLM response cache |
@@ -68,12 +69,13 @@ See `docker/env.example`.
 ## Tests and benchmark
 
 ```bash
-pytest                                            # offline unit tests, no Ollama or Docker needed
+pytest                                            # 30 offline unit tests, no Ollama or Docker needed
 cd frontend-react && npm run typecheck
+cd frontend-react && npx cypress run              # UI tests (start `npm run dev` first; backend not needed)
 python -m backend.benchmark.run_benchmark         # 40 buggy snippets with hidden tests (needs Ollama)
 ```
 
-Benchmark results are written to `backend/benchmark/results/`.
+Benchmark results are written to `backend/benchmark/results/`. Last run with `llama3`: 34 of 40 snippets fixed on the first attempt (results vary from run to run). The benchmark resumes from an existing `results.json`; delete it for a fresh run.
 
 ## Layout
 
@@ -82,4 +84,5 @@ Benchmark results are written to `backend/benchmark/results/`.
 - `backend/api/services/cache_services.py`: response cache
 - `backend/benchmark/`: benchmark cases and runner
 - `backend/tests/unit/`: offline tests run by CI
-- `frontend-react/`: React, TypeScript and Monaco editor UI
+- `frontend-react/`: React, TypeScript and Monaco editor UI, with Cypress tests in `cypress/`
+- `docker/`: Dockerfile and compose file for the backend and Ollama
