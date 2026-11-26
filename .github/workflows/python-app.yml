@@ -38,3 +38,8 @@ jobs:
     - run: npm ci
     - run: npm run typecheck
     - run: npx vite build
+    - name: Cypress end-to-end tests
+      run: |
+        npx vite --port 5173 --strictPort &
+        timeout 60 sh -c 'until curl -sf http://localhost:5173 > /dev/null; do sleep 1; done'
+        npx cypress run
