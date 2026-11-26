@@ -1,4 +1,4 @@
-# OpenFix Pro Usage Guide
+# FixLoop Usage Guide
 
 ## Table of Contents
 - [Introduction](#introduction)
@@ -22,11 +22,11 @@
 
 ## Introduction
 
-OpenFix Pro is a free, research-grade self-correcting AI coding assistant designed to help developers with various coding tasks. It combines advanced code analysis, bug fixing, optimization, and execution capabilities in a single tool.
+FixLoop is a free, research-grade self-correcting AI coding assistant designed to help developers with various coding tasks. It combines advanced code analysis, bug fixing, optimization, and execution capabilities in a single tool.
 
 ## Getting Started
 
-OpenFix Pro can be used via its API endpoints or through the web interface. The typical workflow is:
+FixLoop can be used via its API endpoints or through the web interface. The typical workflow is:
 
 1. Submit your code for analysis
 2. Receive suggestions, optimizations, or fixes
@@ -54,8 +54,8 @@ OpenFix Pro can be used via its API endpoints or through the web interface. The 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/openfix-pro.git
-   cd openfix-pro
+   git clone https://github.com/yourusername/fixloop.git
+   cd fixloop
    ```
 
 2. Install dependencies:
@@ -71,7 +71,7 @@ OpenFix Pro can be used via its API endpoints or through the web interface. The 
 
 4. Start the server:
    ```bash
-   python openfix_pro.py
+   python fixloop.py
    ```
 
 Alternatively, you can use Docker:
@@ -206,7 +206,7 @@ Example response includes execution results.
 
 ### Data Visualization
 
-OpenFix Pro supports various data visualization libraries including matplotlib and pandas:
+FixLoop supports various data visualization libraries including matplotlib and pandas:
 
 ```python
 import requests
@@ -240,7 +240,7 @@ The response will include information about the generated visualization.
 
 ### Machine Learning Support
 
-OpenFix Pro supports machine learning code execution and optimization:
+FixLoop supports machine learning code execution and optimization:
 
 ```python
 import requests
@@ -281,23 +281,23 @@ print(response.json())
 
 ### VS Code Extension
 
-OpenFix Pro can be integrated with Visual Studio Code using the OpenFix Pro extension:
+FixLoop can be integrated with Visual Studio Code using the FixLoop extension:
 
 1. Install the extension from the VS Code marketplace
-2. Configure the extension with your OpenFix Pro server URL
+2. Configure the extension with your FixLoop server URL
 3. Use the extension commands to analyze, fix, or optimize your code directly in VS Code
 
 ### PyCharm Plugin
 
 For PyCharm users:
 
-1. Install the OpenFix Pro plugin from JetBrains Marketplace
-2. Configure the plugin with your OpenFix Pro server URL
-3. Access OpenFix Pro features through the PyCharm Tools menu
+1. Install the FixLoop plugin from JetBrains Marketplace
+2. Configure the plugin with your FixLoop server URL
+3. Access FixLoop features through the PyCharm Tools menu
 
 ## Configuration
 
-OpenFix Pro can be configured through environment variables:
+FixLoop can be configured through environment variables:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
@@ -318,11 +318,11 @@ OpenFix Pro can be configured through environment variables:
 
 ### Common Issues
 
-1. **Connection errors**: Ensure the OpenFix Pro server is running and accessible
+1. **Connection errors**: Ensure the FixLoop server is running and accessible
 2. **Timeout errors**: Large code snippets may require increased timeout settings
 3. **Memory issues**: Consider reducing model size or increasing system resources
 4. **Incorrect results**: Try providing more context or simplifying the code
 
 ## Contributing
 
-We welcome contributions to OpenFix Pro! Please see our contributing guidelines for more information on how to get involved. 
+We welcome contributions to FixLoop! Please see our contributing guidelines for more information on how to get involved. 

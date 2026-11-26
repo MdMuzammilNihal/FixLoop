@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Comprehensive Evaluation Script for OpenFix Pro
+Comprehensive Evaluation Script for FixLoop
 ================================================
-This script tests all the major functionality of OpenFix Pro:
+This script tests all the major functionality of FixLoop:
 1. Analysis of code
 2. Code optimization
 3. Code fixing
@@ -661,7 +661,7 @@ def generate_evaluation_report(scores):
     
     # Create report
     report = f"""
-# OpenFix Pro Evaluation Report
+# FixLoop Evaluation Report
 
 ## Summary
 
@@ -782,7 +782,7 @@ Based on the evaluation results, the following areas could be improved:
             
             plt.ylim(0, 105)  # Set y-axis limit
             plt.ylabel('Score (%)')
-            plt.title('OpenFix Pro Evaluation Results')
+            plt.title('FixLoop Evaluation Results')
             plt.xticks(rotation=45)
             plt.tight_layout()
             plt.legend()
@@ -813,11 +813,11 @@ def check_api_health():
 
 def main():
     """Run the comprehensive evaluation"""
-    print_section("OpenFix Pro Comprehensive Evaluation")
+    print_section("FixLoop Comprehensive Evaluation")
     
     # Check if API is running
     if not check_api_health():
-        print("\nError: API is not running or not accessible. Please start the OpenFix Pro server and try again.")
+        print("\nError: API is not running or not accessible. Please start the FixLoop server and try again.")
         return
     
     # Run all tests

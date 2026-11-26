@@ -6,6 +6,7 @@ class CodeRequest(BaseModel):
     language: str = "python"
     action: str = "analyze"  # analyze, optimize, hint, fix, execute
     inputs: Optional[List[str]] = None
+    verify_execution: bool = False  # fix action: also run the fixed code to verify it (executes on the host)
     class Config:
         validate_assignment = True
     @classmethod
@@ -38,6 +39,8 @@ class CodeResponse(BaseModel):
     suggestions: Optional[List[str]] = None
     execution_result: Optional[dict] = None
     performance_metrics: Optional[Dict[str, Any]] = None
+    attempts: Optional[List[Dict[str, Any]]] = None
+    verified: Optional[bool] = None
     processing_time: float
 
 class BatchCodeRequest(BaseModel):

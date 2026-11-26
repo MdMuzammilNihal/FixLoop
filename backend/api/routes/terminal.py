@@ -5,11 +5,26 @@ import os
 import asyncio
 
 router = APIRouter()
-docker_client = docker.from_env()
+_docker_client = None
+
+
+def get_docker_client():
+    """Connect to Docker on first use so the API can start without a Docker daemon."""
+    global _docker_client
+    if _docker_client is None:
+        _docker_client = docker.from_env()
+    return _docker_client
+
 
 @router.websocket("/ws/terminal")
 async def terminal_ws(websocket: WebSocket):
     await websocket.accept()
+    try:
+        docker_client = get_docker_client()
+    except docker.errors.DockerException as e:
+        await websocket.send_text(f"Terminal unavailable: Docker is not running ({e})\r\n")
+        await websocket.close()
+        return
     session_id = str(uuid.uuid4())
     workspace_dir = f"/tmp/{session_id}"
     os.makedirs(workspace_dir, exist_ok=True)

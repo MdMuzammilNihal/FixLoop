@@ -7,11 +7,15 @@ from backend.api.services.logic_services import (
     analyze_code,
     optimize_code,
     fix_code,
+    fix_code_self_correcting,
     generate_hints,
     execute_python_code,
     build_prompt,
     estimate_max_tokens,
-    check_ollama_available
+    check_ollama_available,
+    ollama_stream,
+    OLLAMA_MODEL,
+    OLLAMA_CODE_MODEL,
 )
 
 # process_code
@@ -113,7 +117,9 @@ async def process_code(request: CodeRequest):
                     processing_time=time.time() - start_time
                 )
             elif request.action == 'fix':
-                result = await fix_code(request.code, request.language)
+                result = await fix_code_self_correcting(
+                    request.code, request.language, verify_execution=request.verify_execution
+                )
                 if isinstance(result, dict) and result.get('explanation', '').startswith('Error'):
                     return JSONResponse(
                         status_code=500,
@@ -128,6 +134,8 @@ async def process_code(request: CodeRequest):
                     original_code=request.code,
                     processed_code=fixed_code,
                     explanation=explanation,
+                    attempts=result.get('attempts'),
+                    verified=result.get('verified'),
                     processing_time=time.time() - start_time
                 )
             elif request.action == 'execute':
@@ -225,16 +233,22 @@ async def process_code_stream(request: CodeRequest):
                     "processing_time": time.time() - start_time
                 }
             )
-        # ollama_available check should be handled at a higher level or injected
+        if not await check_ollama_available():
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "error": "Ollama service is not available. Please ensure it is running at the configured OLLAMA_BASE_URL.",
+                    "processing_time": time.time() - start_time
+                }
+            )
         prompt = build_prompt(request.action, request.code, request.language)
-        model = "codellama" if request.action in ["analyze", "fix", "optimize"] else "llama3"
+        model = OLLAMA_CODE_MODEL if request.action in ["analyze", "fix", "optimize"] else OLLAMA_MODEL
         max_tokens = estimate_max_tokens(prompt)
         async def event_generator():
             try:
                 yield json.dumps({"type": "start", "action": request.action}) + "\n"
-                # This should call the streaming LLM generator (to be injected)
-                # For now, yield a stub
-                yield json.dumps({"type": "chunk", "content": "[Streaming not implemented in modular version]"}) + "\n"
+                async for chunk in ollama_stream(prompt, model, max_tokens):
+                    yield json.dumps({"type": "chunk", "content": chunk}) + "\n"
                 yield json.dumps({"type": "end"}) + "\n"
             except Exception as e:
                 yield json.dumps({"type": "error", "error": str(e)}) + "\n"
@@ -257,7 +271,7 @@ async def process_code_batch(request: BatchCodeRequest):
             return JSONResponse(
                 status_code=400,
                 content={
-                    "error": "Invalid batch request: " + ", ".join(errors),
+                    "error": "Invalid batch request: " + (errors if isinstance(errors, str) else ", ".join(errors)),
                     "processing_time": time.time() - start_time
                 }
             )
@@ -272,9 +286,9 @@ async def process_code_batch(request: BatchCodeRequest):
                 )
                 single_response = await process_code(single_request)
                 if isinstance(single_response, JSONResponse):
-                    results.append(single_response.body)
+                    results.append(json.loads(single_response.body))
                 else:
-                    results.append(single_response.dict())
+                    results.append(single_response.model_dump())
             except Exception as e:
                 results.append({
                     "error": f"Error processing this item: {str(e)}",
@@ -299,6 +313,32 @@ async def process_code_batch(request: BatchCodeRequest):
 
 # fix_code_with_context
 async def fix_code_with_context(request: ContextAwareFixRequest):
-    # This should call the context-aware fix logic (to be modularized further)
-    # For now, return a stub
-    return JSONResponse(content={"message": "Context-aware fix not yet modularized."}) 
+    """Fix code using extra caller-supplied context (surrounding code, dependencies, error message)."""
+    start_time = time.time()
+    if not CodeRequest.validate_code(request.code):
+        return JSONResponse(status_code=400, content={"error": "Invalid code: Code cannot be empty"})
+    if not CodeRequest.validate_language(request.language):
+        return JSONResponse(status_code=400, content={"error": f"Unsupported language: {request.language}"})
+    if not await check_ollama_available():
+        return JSONResponse(
+            status_code=503,
+            content={"error": "Ollama service is not available. Please ensure it is running at the configured OLLAMA_BASE_URL."},
+        )
+    parts = []
+    if request.file_path:
+        parts.append(f"File: {request.file_path}")
+    if request.dependencies:
+        parts.append("Dependencies: " + ", ".join(request.dependencies))
+    if request.error_message:
+        parts.append(f"Error message observed when running the code:\n{request.error_message}")
+    if request.context:
+        parts.append(f"Surrounding code / notes:\n{request.context}")
+    result = await fix_code_self_correcting(request.code, request.language, extra_context="\n".join(parts))
+    return CodeResponse(
+        original_code=request.code,
+        processed_code=result.get("fixed_code", ""),
+        explanation=result.get("explanation", ""),
+        attempts=result.get("attempts"),
+        verified=result.get("verified"),
+        processing_time=time.time() - start_time,
+    )

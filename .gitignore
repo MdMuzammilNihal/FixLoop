@@ -38,3 +38,9 @@ node_modules/
 *.swp
 *.bak
 *.tmp 
+# Generated files
+backend/api/checkpoint/
+backend/*.png
+frontend-react/dist/
+frontend-react/src/**/*.js
+frontend-react/tsconfig.tsbuildinfo

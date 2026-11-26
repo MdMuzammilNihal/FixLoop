@@ -1,4 +1,4 @@
-# OpenFix Pro
+# FixLoop
 
 A Free, Research-Grade Self-Correcting AI Coding Assistant with Optimization, Hinting, and Execution Support
 
@@ -26,8 +26,8 @@ A Free, Research-Grade Self-Correcting AI Coding Assistant with Optimization, Hi
 
 1. Clone this repository:
    ```bash
-   git clone https://github.com/yourusername/openfix-pro.git
-   cd openfix-pro
+   git clone https://github.com/yourusername/fixloop.git
+   cd fixloop
    ```
 
 2. Create a virtual environment and install dependencies:
@@ -39,7 +39,7 @@ A Free, Research-Grade Self-Correcting AI Coding Assistant with Optimization, Hi
 
 3. Run the application:
    ```bash
-   python openfix_pro.py
+   python fixloop.py
    ```
 
 4. Open your browser and navigate to [http://localhost:8000](http://localhost:8000)

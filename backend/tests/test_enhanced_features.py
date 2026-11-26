@@ -1,5 +1,5 @@
 """
-Test script for enhanced OpenFix Pro features
+Test script for enhanced FixLoop features
 """
 import requests
 import json
@@ -226,10 +226,10 @@ if __name__ == "__main__":
             sys.exit(1)
     except Exception as e:
         print(f"❌ Could not connect to API: {str(e)}")
-        print("Make sure OpenFix Pro is running at http://localhost:8000")
+        print("Make sure FixLoop is running at http://localhost:8000")
         sys.exit(1)
     
-    print("🧪 Starting enhanced features tests for OpenFix Pro...\n")
+    print("🧪 Starting enhanced features tests for FixLoop...\n")
     
     # Run tests
     test_visualization_detection()

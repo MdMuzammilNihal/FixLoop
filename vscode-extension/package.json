@@ -1,6 +1,6 @@
 {
-  "name": "openfix-pro-vscode",
-  "displayName": "OpenFix Pro",
+  "name": "fixloop-vscode",
+  "displayName": "FixLoop",
   "description": "AI-powered code analysis, bug fixing, and optimization for VS Code",
   "version": "1.0.0",
   "engines": {
@@ -13,45 +13,45 @@
     "Debuggers"
   ],
   "activationEvents": [
-    "onCommand:openfix-pro.analyzeCode",
-    "onCommand:openfix-pro.fixCode",
-    "onCommand:openfix-pro.optimizeCode",
-    "onCommand:openfix-pro.executeCode"
+    "onCommand:fixloop.analyzeCode",
+    "onCommand:fixloop.fixCode",
+    "onCommand:fixloop.optimizeCode",
+    "onCommand:fixloop.executeCode"
   ],
   "main": "./extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "openfix-pro.analyzeCode",
-        "title": "OpenFix Pro: Analyze Code"
+        "command": "fixloop.analyzeCode",
+        "title": "FixLoop: Analyze Code"
       },
       {
-        "command": "openfix-pro.fixCode",
-        "title": "OpenFix Pro: Fix Code"
+        "command": "fixloop.fixCode",
+        "title": "FixLoop: Fix Code"
       },
       {
-        "command": "openfix-pro.optimizeCode",
-        "title": "OpenFix Pro: Optimize Code"
+        "command": "fixloop.optimizeCode",
+        "title": "FixLoop: Optimize Code"
       },
       {
-        "command": "openfix-pro.executeCode",
-        "title": "OpenFix Pro: Execute Code"
+        "command": "fixloop.executeCode",
+        "title": "FixLoop: Execute Code"
       }
     ],
     "configuration": {
-      "title": "OpenFix Pro",
+      "title": "FixLoop",
       "properties": {
-        "openfix-pro.serverUrl": {
+        "fixloop.serverUrl": {
           "type": "string",
           "default": "http://localhost:8000",
-          "description": "The URL of the OpenFix Pro server"
+          "description": "The URL of the FixLoop server"
         },
-        "openfix-pro.autoAnalyze": {
+        "fixloop.autoAnalyze": {
           "type": "boolean",
           "default": false,
           "description": "Automatically analyze code on save"
         },
-        "openfix-pro.showInlineErrors": {
+        "fixloop.showInlineErrors": {
           "type": "boolean",
           "default": true,
           "description": "Show errors inline in the editor"
@@ -62,23 +62,23 @@
       "editor/context": [
         {
           "when": "editorHasSelection",
-          "command": "openfix-pro.analyzeCode",
-          "group": "openfix"
+          "command": "fixloop.analyzeCode",
+          "group": "fixloop"
         },
         {
           "when": "editorHasSelection",
-          "command": "openfix-pro.fixCode",
-          "group": "openfix"
+          "command": "fixloop.fixCode",
+          "group": "fixloop"
         },
         {
           "when": "editorHasSelection",
-          "command": "openfix-pro.optimizeCode",
-          "group": "openfix"
+          "command": "fixloop.optimizeCode",
+          "group": "fixloop"
         },
         {
           "when": "editorHasSelection && editorLangId == 'python'",
-          "command": "openfix-pro.executeCode",
-          "group": "openfix"
+          "command": "fixloop.executeCode",
+          "group": "fixloop"
         }
       ]
     },

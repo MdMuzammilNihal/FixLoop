@@ -2,7 +2,7 @@ from backend.api.schemas.models import IDERequest
 from fastapi.responses import JSONResponse
 import time
 import traceback
-from backend.api.services.logic_services import analyze_code, fix_code, optimize_code, execute_python_code, extract_line_info_from_error
+from backend.api.services.logic_services import analyze_code, fix_code, fix_code_self_correcting, optimize_code, execute_python_code, extract_line_info_from_error
 
 async def process_ide_request(request: IDERequest):
     start_time = time.time()
@@ -26,9 +26,10 @@ async def process_ide_request(request: IDERequest):
         if request.action == "analyze":
             analysis_results = await analyze_code(request.code, request.language)
             result.update({
-                "explanation": analysis_results.get("explanation"),
-                "errors": analysis_results.get("errors"),
-                "hints": analysis_results.get("hints")
+                "explanation": analysis_results.get("code_summary") or analysis_results.get("raw"),
+                "errors": analysis_results.get("errors", []),
+                "warnings": analysis_results.get("warnings", []),
+                "hints": analysis_results.get("suggestions", [])
             })
             if analysis_results.get("errors"):
                 for error in analysis_results.get("errors", []):
@@ -38,10 +39,10 @@ async def process_ide_request(request: IDERequest):
                         "severity": "error",
                         "line": line_info.get("line", 1),
                         "column": line_info.get("column", 1),
-                        "source": "OpenFix Pro"
+                        "source": "FixLoop"
                     })
         elif request.action == "fix":
-            fix_results = await fix_code(request.code, request.language)
+            fix_results = await fix_code_self_correcting(request.code, request.language)
             result.update({
                 "processed_code": fix_results.get("fixed_code"),
                 "explanation": fix_results.get("explanation")
@@ -56,9 +57,11 @@ async def process_ide_request(request: IDERequest):
         elif request.action == "execute":
             if request.language == "python":
                 execution_results = await execute_python_code(request.code, request.inputs)
+                stderr = execution_results.get("stderr", "")
+                failed = execution_results.get("exit_code") not in (0, None)
                 result.update({
-                    "execution_result": execution_results.get("output"),
-                    "errors": execution_results.get("errors")
+                    "execution_result": execution_results,
+                    "errors": [stderr] if failed and stderr else []
                 })
             else:
                 result.update({

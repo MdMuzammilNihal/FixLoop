@@ -1,14 +1,13 @@
-version: '3.8'
-
+# Run from the repository root:  docker compose -f docker/docker-compose.yml up --build
+# Then pull the models once:     docker compose -f docker/docker-compose.yml exec ollama ollama pull llama3
+#                                docker compose -f docker/docker-compose.yml exec ollama ollama pull codellama
 services:
-  openfix-pro:
+  fixloop:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
     ports:
-      - "8000:8000"
-    volumes:
-      - .:/app
+      - "127.0.0.1:8000:8000"   # code execution is not sandboxed: keep this on localhost
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
       - OLLAMA_MODEL=llama3
@@ -20,15 +19,10 @@ services:
   ollama:
     image: ollama/ollama:latest
     ports:
-      - "11434:11434"
+      - "127.0.0.1:11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    deploy:
-      resources:
-        limits:
-          memory: 8G
     restart: unless-stopped
-    command: serve
 
 volumes:
-  ollama_data: 
+  ollama_data:

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-OpenFix Pro - Ollama Test Script
+FixLoop - Ollama Test Script
 
-This script checks if Ollama is properly installed and available for use with OpenFix Pro.
+This script checks if Ollama is properly installed and available for use with FixLoop.
 """
 
 import os
@@ -88,7 +88,7 @@ def print_system_info(info: Dict[str, Any]) -> None:
 
 async def run_tests() -> None:
     """Run all tests."""
-    print_header("OpenFix Pro - Ollama Test Script")
+    print_header("FixLoop - Ollama Test Script")
     
     # Check system requirements
     system_info = get_system_info()
@@ -143,8 +143,8 @@ async def run_tests() -> None:
         print("Ollama is running, but some required models are missing.")
         print("Install the missing models and run this test again.")
     else:
-        print("All tests passed! OpenFix Pro should work correctly with Ollama.")
-        print("Run 'python openfix_pro.py' to start the application.")
+        print("All tests passed! FixLoop should work correctly with Ollama.")
+        print("Run 'python fixloop.py' to start the application.")
 
 if __name__ == "__main__":
     import asyncio

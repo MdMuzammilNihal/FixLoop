@@ -151,7 +151,7 @@ print(f'The average is: {avg}')
 
 # Run the tests
 if __name__ == "__main__":
-    print("Starting OpenFix Pro API tests (streamlined version)...")
+    print("Starting FixLoop API tests (streamlined version)...")
     run_tests()
     test_hint()
     print("\nTests completed!") 

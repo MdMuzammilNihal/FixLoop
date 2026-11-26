@@ -1,6 +1,6 @@
-# Setting Up Ollama for OpenFix Pro
+# Setting Up Ollama for FixLoop
 
-This guide will walk you through setting up Ollama, which provides the AI models that power OpenFix Pro.
+This guide will walk you through setting up Ollama, which provides the AI models that power FixLoop.
 
 ## What is Ollama?
 
@@ -41,7 +41,7 @@ Ollama is an open-source tool that allows you to run Large Language Models (LLMs
 
 ## Downloading Required Models
 
-OpenFix Pro uses two main models:
+FixLoop uses two main models:
 
 1. **llama3**: For general language understanding
 2. **codellama**: Specifically optimized for code understanding and generation
@@ -90,8 +90,8 @@ To verify that Ollama is running correctly:
 
 ## Using with Docker
 
-If you're using the Docker setup provided with OpenFix Pro, Ollama will be automatically deployed as a container, and you don't need to install it separately on your host system. The docker-compose.yml file is already configured to pull and use the required Ollama image.
+If you're using the Docker setup provided with FixLoop, Ollama will be automatically deployed as a container, and you don't need to install it separately on your host system. The docker-compose.yml file is already configured to pull and use the required Ollama image.
 
 ## Next Steps
 
-Once Ollama is set up, return to the main README for instructions on running OpenFix Pro. 
+Once Ollama is set up, return to the main README for instructions on running FixLoop. 

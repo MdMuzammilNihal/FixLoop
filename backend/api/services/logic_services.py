@@ -15,6 +15,8 @@ import httpx
 import os
 from datetime import datetime
 import logging
+import ast
+from backend.api.services.cache_services import cache_manager
 
 async def check_ollama_available():
     """Check if Ollama service is available by pinging the /api/tags endpoint."""
@@ -246,7 +248,11 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 logger = logging.getLogger(__name__)
 
 async def ollama_generate(prompt: str, model: str = OLLAMA_MODEL, max_tokens: int = 2048, timeout: float = 90.0, task: str = None, language: str = None):
-    """Generate text with Ollama in non-streaming mode."""
+    """Generate text with Ollama in non-streaming mode. Successful responses are cached."""
+    cache_key = cache_manager.make_key(OLLAMA_BASE_URL, model, max_tokens, prompt)
+    cached = cache_manager.get(cache_key)
+    if cached is not None:
+        return cached
     try:
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.post(
@@ -264,11 +270,61 @@ async def ollama_generate(prompt: str, model: str = OLLAMA_MODEL, max_tokens: in
             if response.status_code != 200:
                 return f"Error from Ollama API: {response.status_code}"
             data = response.json()
-            return data.get("response", "")
+            text = data.get("response", "")
+            if text.strip():
+                cache_manager.set(cache_key, text)
+            return text
     except Exception as e:
         return f"Error during Ollama generation: {str(e)}"
 
+
+async def ollama_stream(prompt: str, model: str = OLLAMA_MODEL, max_tokens: int = 2048, timeout: float = 120.0):
+    """Yield text chunks from Ollama as they are generated."""
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        async with client.stream(
+            "POST",
+            f"{OLLAMA_BASE_URL}/api/generate",
+            json={
+                "model": model,
+                "prompt": prompt,
+                "stream": True,
+                "options": {"num_predict": max_tokens, "temperature": 0.7},
+            },
+        ) as response:
+            if response.status_code != 200:
+                raise RuntimeError(f"Ollama API returned {response.status_code}")
+            async for line in response.aiter_lines():
+                if not line.strip():
+                    continue
+                try:
+                    data = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if data.get("response"):
+                    yield data["response"]
+                if data.get("done"):
+                    break
+
+
 # --- Main Logic Functions (Full Implementations) ---
+
+def _file_issue(issue, details, section, errors, warnings, suggestions):
+    """Put a parsed issue into the right bucket: the section header it appeared under wins,
+    and the keywords in its text are only a fallback when no header was seen."""
+    text = f"{issue}\n" + "\n".join(details)
+    if section == "errors":
+        errors.append(text)
+    elif section == "warnings":
+        warnings.append(text)
+    elif section == "suggestions":
+        suggestions.append(text)
+    elif "error" in issue.lower():
+        errors.append(text)
+    elif "warning" in issue.lower():
+        warnings.append(text)
+    else:
+        suggestions.append(text)
+
 
 async def analyze_code(code: str, language: str):
     """Analyze code for errors, warnings, and suggestions with category-based organization. Always returns a structured response with all keys."""
@@ -294,6 +350,7 @@ async def analyze_code(code: str, language: str):
         current_section = None
         section_buffer = []
         current_issue = None
+        issue_section = None
         current_details = []
         summary_found = False
         for i, line in enumerate(lines):
@@ -308,6 +365,14 @@ async def analyze_code(code: str, language: str):
             if not line:
                 continue
             lower_line = line.lower()
+            is_header = any(h in lower_line for h in (
+                "errors:", "error section:", "warnings:", "warning section:",
+                "suggestions:", "suggestion section:"))
+            if is_header and current_issue:
+                # a new section starts: the issue being collected belongs to the previous one
+                _file_issue(current_issue, current_details, issue_section, errors, warnings, suggestions)
+                current_issue = None
+                current_details = []
             if "errors:" in lower_line or "error section:" in lower_line:
                 if current_section and section_buffer:
                     sections[current_section].extend(section_buffer)
@@ -330,13 +395,9 @@ async def analyze_code(code: str, language: str):
             category_match = re.search(r'^(.*?)\s*-\s*\[LINE', line, re.IGNORECASE)
             if line_number_match and category_match:
                 if current_issue:
-                    if "error" in current_issue.lower():
-                        errors.append(f"{current_issue}\n" + "\n".join(current_details))
-                    elif "warning" in current_issue.lower():
-                        warnings.append(f"{current_issue}\n" + "\n".join(current_details))
-                    else:
-                        suggestions.append(f"{current_issue}\n" + "\n".join(current_details))
+                    _file_issue(current_issue, current_details, issue_section, errors, warnings, suggestions)
                 current_issue = line
+                issue_section = current_section
                 current_details = []
                 continue
             if line.startswith(('* IMPACT:', '* FIX:', '* EXAMPLE:', '*IMPACT:', '*FIX:', '*EXAMPLE:')):
@@ -348,23 +409,17 @@ async def analyze_code(code: str, language: str):
             elif current_section:
                 section_buffer.append(line)
         if current_issue:
-            if "error" in current_issue.lower():
-                errors.append(f"{current_issue}\n" + "\n".join(current_details))
-            elif "warning" in current_issue.lower():
-                warnings.append(f"{current_issue}\n" + "\n".join(current_details))
-            else:
-                suggestions.append(f"{current_issue}\n" + "\n".join(current_details))
+            _file_issue(current_issue, current_details, issue_section, errors, warnings, suggestions)
         if current_section and section_buffer:
             sections[current_section].extend(section_buffer)
-        if not any([errors, warnings, suggestions]):
-            for section_name, section_content in sections.items():
-                extracted_items = extract_items(section_content)
-                if section_name == "errors":
-                    errors = extracted_items
-                elif section_name == "warnings":
-                    warnings = extracted_items
-                elif section_name == "suggestions":
-                    suggestions = extracted_items
+        for section_name, section_content in sections.items():
+            extracted_items = extract_items(section_content)
+            if section_name == "errors":
+                errors.extend(extracted_items)
+            elif section_name == "warnings":
+                warnings.extend(extracted_items)
+            elif section_name == "suggestions":
+                suggestions.extend(extracted_items)
         if not any([errors, warnings, suggestions]):
             for line in lines:
                 line = line.strip()
@@ -709,9 +764,11 @@ async def generate_hints(code: str, language: str):
         "hints": hints
     }
 
-async def fix_code(code: str, language: str):
+async def fix_code(code: str, language: str, extra_context: str = ""):
     """Fix bugs and issues in the code with enhanced bug detection and categorization. Requires handling of edge cases."""
     prompt = f"""You are an expert programmer. Fix all bugs and issues in this {language} code:\n\n```{language}\n{code}\n```\n\nFirst identify the bugs/issues, then provide the complete fixed code.\n\nIMPORTANT FORMATTING INSTRUCTIONS:\n1. Start your explanation with "Explanation:" on its own line\n2. List each identified bug/issue under "Bugs Found:" with format "- BUG: description"\n3. For each bug, explain the root cause and how it was fixed under "- FIX: explanation"\n4. After your explanation, ALWAYS include the fixed code inside a code block\n5. Start the fixed code section with "Fixed Code:" on its own line\n6. Format the fixed code in a code block starting with ```{language} and ending with ```\n7. Do not omit any parts of the code - provide the complete fixed version\n8. **Explicitly handle edge cases such as empty lists, None values, empty dicts/sets, and invalid input. If the code processes a list, dict, set, or sequence, always add a check for empty or None at the start of the function.**\n\nExample format:\nExplanation:\nThe code contains several bugs that need to be fixed.\n\nBugs Found:\n- BUG: Description of first bug\n- FIX: How the first bug was fixed\n- BUG: Description of second bug\n- FIX: How the second bug was fixed\n\nFixed Code:\n```{language}\n(Complete fixed code here)\n```\n"""
+    if extra_context:
+        prompt += "\n\nAdditional context to take into account:\n" + extra_context + "\n"
     max_tokens = estimate_max_tokens(prompt) + 1024
     start_time = time.time()
     result = await ollama_generate(prompt, OLLAMA_CODE_MODEL, max_tokens, timeout=120.0, task="fix", language=language)
@@ -797,15 +854,15 @@ async def fix_code(code: str, language: str):
                         insert_at += 1
                     check_line = f"    if not {needs_edge_case} or {needs_edge_case} is None:"
                     if needs_type == "dict":
-                        check_line += f"\n        return {{}}  # Added by OpenFix Pro: handle empty dict edge case"
+                        check_line += f"\n        return {{}}  # Added by FixLoop: handle empty dict edge case"
                     elif needs_type == "set":
-                        check_line += f"\n        return set()  # Added by OpenFix Pro: handle empty set edge case"
+                        check_line += f"\n        return set()  # Added by FixLoop: handle empty set edge case"
                     else:
-                        check_line += f"\n        return 0  # Added by OpenFix Pro: handle empty list edge case"
+                        check_line += f"\n        return 0  # Added by FixLoop: handle empty list edge case"
                     lines.insert(insert_at, check_line)
                     break
             fixed_code = '\n'.join(lines)
-            explanation += f"\n[OpenFix Pro: Added explicit check for empty/None {needs_type} variable '{needs_edge_case}' to guarantee edge case handling.]"
+            explanation += f"\n[FixLoop: Added explicit check for empty/None {needs_type} variable '{needs_edge_case}' to guarantee edge case handling.]"
         diff_summary = {}  # You can implement generate_diff_summary if needed
         response_data = {
             "original_code": code,
@@ -827,6 +884,48 @@ async def fix_code(code: str, language: str):
             "diff_summary": {},
             "processing_time": time.time() - start_time
         }
+
+def check_python_syntax(code: str):
+    """Return None if the code parses, otherwise a short description of the SyntaxError."""
+    try:
+        ast.parse(code)
+        return None
+    except SyntaxError as e:
+        return f"SyntaxError: {e.msg} (line {e.lineno})"
+
+
+async def fix_code_self_correcting(code: str, language: str, max_attempts: int = 3,
+                                   verify_execution: bool = False, extra_context: str = ""):
+    """Fix code, then verify the result and ask the model to retry with the failure as feedback.
+
+    Verification always includes a syntax check for Python. With verify_execution=True the fixed
+    code is also run (WARNING: executes on the host) and a non-zero exit code counts as a failure.
+    The result carries an ``attempts`` list describing every try.
+    """
+    attempts = []
+    feedback = extra_context
+    result = None
+    for attempt in range(1, max_attempts + 1):
+        result = await fix_code(code, language, extra_context=feedback)
+        fixed = result.get("fixed_code", "")
+        problem = None
+        if language.lower() == "python" and fixed and fixed != code:
+            problem = check_python_syntax(fixed)
+            if problem is None and verify_execution:
+                run = await execute_python_code(fixed)
+                if run.get("exit_code") not in (0, None):
+                    problem = (run.get("stderr") or "non-zero exit code").strip()[-800:]
+        attempts.append({"attempt": attempt, "ok": problem is None, "problem": problem})
+        if problem is None:
+            break
+        feedback = (extra_context + "\n" if extra_context else "") + (
+            f"Your previous fix failed verification with this error:\n{problem}\n"
+            f"Previous attempt:\n```{language}\n{fixed}\n```\nFix it properly this time."
+        )
+    result["attempts"] = attempts
+    result["verified"] = bool(attempts and attempts[-1]["ok"])
+    return result
+
 
 async def execute_python_code(code: str, inputs: Optional[List[str]] = None):
     """Safely execute Python code and return the result (fully async, non-blocking). Improved input() patch, Python version check, and error/output handling."""
@@ -913,8 +1012,8 @@ def input(prompt=''):
                 except MemoryError:
                     os.unlink(temp_file_path)
                     return {
-                        "stderr": "[OpenFix Pro] MemoryError: The code attempted to use too much memory and was stopped.",
-                        "stdout": "[OpenFix Pro] MemoryError: The code attempted to use too much memory and was stopped.",
+                        "stderr": "[FixLoop] MemoryError: The code attempted to use too much memory and was stopped.",
+                        "stdout": "[FixLoop] MemoryError: The code attempted to use too much memory and was stopped.",
                         "execution_time": time.time() - start_time,
                         "exit_code": -2
                     }
@@ -942,8 +1041,8 @@ def input(prompt=''):
                 except MemoryError:
                     os.unlink(temp_file_path)
                     return {
-                        "stderr": "[OpenFix Pro] MemoryError: The code attempted to use too much memory and was stopped.",
-                        "stdout": "[OpenFix Pro] MemoryError: The code attempted to use too much memory and was stopped.",
+                        "stderr": "[FixLoop] MemoryError: The code attempted to use too much memory and was stopped.",
+                        "stdout": "[FixLoop] MemoryError: The code attempted to use too much memory and was stopped.",
                         "execution_time": time.time() - start_time,
                         "exit_code": -2
                     }
@@ -962,8 +1061,8 @@ def input(prompt=''):
         except MemoryError:
             os.unlink(temp_file_path)
             return {
-                "stderr": "[OpenFix Pro] MemoryError: The code attempted to use too much memory and was stopped.",
-                "stdout": "[OpenFix Pro] MemoryError: The code attempted to use too much memory and was stopped.",
+                "stderr": "[FixLoop] MemoryError: The code attempted to use too much memory and was stopped.",
+                "stdout": "[FixLoop] MemoryError: The code attempted to use too much memory and was stopped.",
                 "execution_time": time.time() - start_time,
                 "exit_code": -2
             }

@@ -9,6 +9,7 @@ import shutil
 from datetime import datetime, timedelta
 from backend.api.schemas.models import CodeRequest, CodeResponse, BatchCodeRequest, IDERequest, IDEResponse, ContextAwareFixRequest
 import logging
+import hashlib
 
 # Configure logging
 logging.basicConfig(
@@ -29,6 +30,10 @@ CACHE_HITS = {"analysis": 0, "fix": 0, "hint": 0, "optimize": 0, "general": 0}
 CACHE_MISSES = {"analysis": 0, "fix": 0, "hint": 0, "optimize": 0, "general": 0}
 CACHE_TTL = timedelta(hours=3)
 CACHE_MAX_SIZE = 500
+CHECKPOINT_DIR = os.environ.get(
+    "FIXLOOP_CACHE_DIR",
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "checkpoint"),
+)
 
 class CacheManager:
     def __init__(self):
@@ -48,17 +53,17 @@ class CacheManager:
             "lookup_time_sum": 0.0
         }
         self.cache_files = {
-            "general": os.path.join("backend/api/checkpoint", "general_cache.gz"),
-            "analysis": os.path.join("backend/api/checkpoint", "analysis_cache.gz"),
-            "fix": os.path.join("backend/api/checkpoint", "fix_cache.gz"),
-            "hint": os.path.join("backend/api/checkpoint", "hint_cache.gz"),
-            "optimize": os.path.join("backend/api/checkpoint", "optimize_cache.gz"),
-            "usage": os.path.join("backend/api/checkpoint", "cache_usage.gz"),
-            "hits": os.path.join("backend/api/checkpoint", "cache_hits.gz"),
-            "expiry": os.path.join("backend/api/checkpoint", "cache_expiry.gz"),
-            "stats": os.path.join("backend/api/checkpoint", "cache_stats.gz")
+            "general": os.path.join(CHECKPOINT_DIR, "general_cache.gz"),
+            "analysis": os.path.join(CHECKPOINT_DIR, "analysis_cache.gz"),
+            "fix": os.path.join(CHECKPOINT_DIR, "fix_cache.gz"),
+            "hint": os.path.join(CHECKPOINT_DIR, "hint_cache.gz"),
+            "optimize": os.path.join(CHECKPOINT_DIR, "optimize_cache.gz"),
+            "usage": os.path.join(CHECKPOINT_DIR, "cache_usage.gz"),
+            "hits": os.path.join(CHECKPOINT_DIR, "cache_hits.gz"),
+            "expiry": os.path.join(CHECKPOINT_DIR, "cache_expiry.gz"),
+            "stats": os.path.join(CHECKPOINT_DIR, "cache_stats.gz")
         }
-        self.backup_dir = os.path.join("backend/api/checkpoint", "backups")
+        self.backup_dir = os.path.join(CHECKPOINT_DIR, "backups")
         os.makedirs(self.backup_dir, exist_ok=True)
         self.init_auto_save()
     def init_auto_save(self):
@@ -141,6 +146,52 @@ class CacheManager:
             logger.info(f"Cleaned up {eviction_count} expired or least used cache entries")
             self.dirty = True
         return eviction_count
+    @staticmethod
+    def make_key(*parts) -> str:
+        return hashlib.sha256("␟".join(str(p) for p in parts).encode("utf-8")).hexdigest()
+
+    def get(self, key: str):
+        """Return a cached LLM response or None (respects TTL, updates hit/miss stats)."""
+        with self.cache_lock:
+            expiry = LLM_CACHE_EXPIRY.get(key)
+            if key in LLM_CACHE and expiry and expiry > datetime.now():
+                CACHE_HITS["general"] += 1
+                CACHE_USAGE[key] = CACHE_USAGE.get(key, 0) + 1
+                self._update_stats(hit=True)
+                return LLM_CACHE[key]
+            LLM_CACHE.pop(key, None)
+            LLM_CACHE_EXPIRY.pop(key, None)
+            CACHE_MISSES["general"] += 1
+            self._update_stats(hit=False)
+            return None
+
+    def set(self, key: str, value):
+        """Store an LLM response, evicting the least-used entries when over capacity."""
+        with self.cache_lock:
+            LLM_CACHE[key] = value
+            LLM_CACHE_EXPIRY[key] = datetime.now() + CACHE_TTL
+            CACHE_USAGE.setdefault(key, 0)
+            while len(LLM_CACHE) > CACHE_MAX_SIZE:
+                victim = min(LLM_CACHE, key=lambda k: CACHE_USAGE.get(k, 0))
+                LLM_CACHE.pop(victim, None)
+                LLM_CACHE_EXPIRY.pop(victim, None)
+                CACHE_USAGE.pop(victim, None)
+                self.cache_stats["evictions"] += 1
+                self.cache_stats["last_eviction_time"] = time.time()
+            self.dirty = True
+
+    def clear_cache(self):
+        """Empty every in-memory cache and reset hit/miss counters."""
+        with self.cache_lock:
+            for cache in (LLM_CACHE, LLM_CACHE_EXPIRY, ANALYSIS_CACHE, FIX_CACHE,
+                          HINT_CACHE, OPTIMIZATION_CACHE, CACHE_USAGE):
+                cache.clear()
+            for key in CACHE_HITS:
+                CACHE_HITS[key] = 0
+                CACHE_MISSES[key] = 0
+            self.dirty = True
+        return {"success": True, "message": "Cache cleared"}
+
     def get_cache_stats(self):
         with self.cache_lock:
             self.cache_stats["size"] = (
@@ -294,20 +345,3 @@ class CacheManager:
                 return False
 
 cache_manager = CacheManager()
-
-async def clear_cache():
-    global LLM_CACHE, LLM_CACHE_EXPIRY, ANALYSIS_CACHE, FIX_CACHE, HINT_CACHE
-    global OPTIMIZATION_CACHE, CACHE_USAGE
-    with cache_manager.cache_lock:
-        LLM_CACHE = {}
-        LLM_CACHE_EXPIRY = {}
-        ANALYSIS_CACHE = {}
-        FIX_CACHE = {}
-        HINT_CACHE = {}
-        OPTIMIZATION_CACHE = {}
-        CACHE_USAGE = {}
-        for key in CACHE_HITS:
-            CACHE_HITS[key] = 0
-            CACHE_MISSES[key] = 0
-        cache_manager.save_cache_to_disk()
-        return {"success": True, "message": "All caches cleared successfully"} 

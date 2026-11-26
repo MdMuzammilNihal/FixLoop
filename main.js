@@ -21,7 +21,7 @@ function createWindow () {
 app.whenReady().then(() => {
   // Start the Python backend
   backendProcess = spawn('python', [
-    path.join(__dirname, 'backend', 'api', 'openfix_pro.py')
+    path.join(__dirname, 'backend', 'api', 'fixloop.py')
   ], { stdio: 'inherit' });
 
   createWindow();
