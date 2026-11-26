@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import * as Diff2Html from 'diff2html';
 import { createTwoFilesPatch } from 'diff';
 import { marked } from 'marked';
@@ -16,6 +16,7 @@ interface OutputPanelProps {
   runLoading?: boolean;
   errors?: string;
   suggestions?: string;
+  requestedTab?: string;
 }
 
 function parseSections(markdown: string) {
@@ -58,8 +59,13 @@ const TABS = [
   { key: 'Advanced', label: 'Advanced' },
 ];
 
-export const OutputPanel: React.FC<OutputPanelProps> = ({ originalCode, aiCode, aiMarkdown, runOutput, runLoading, errors, suggestions }) => {
+export const OutputPanel: React.FC<OutputPanelProps> = ({ originalCode, aiCode, aiMarkdown, runOutput, runLoading, errors, suggestions, requestedTab }) => {
   const [activeTab, setActiveTab] = useState('Output');
+  // the app asks for a tab (e.g. Errors after a failed request); the user can still click any tab
+  useEffect(() => {
+    const match = TABS.find(t => t.key.toLowerCase() === (requestedTab || '').toLowerCase());
+    if (match) setActiveTab(match.key);
+  }, [requestedTab, errors, suggestions, aiMarkdown]);
   // Parse sections from aiMarkdown
   const sections = parseSections(aiMarkdown || '');
   // Try to get optimized or fixed code for diff

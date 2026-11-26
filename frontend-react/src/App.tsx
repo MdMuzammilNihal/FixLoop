@@ -458,6 +458,7 @@ const App: React.FC = () => {
                   aiMarkdown={output}
                   errors={errors}
                   suggestions={suggestions}
+                  requestedTab={activeTab}
                 />
               </motion.div>
             </AnimatePresence>

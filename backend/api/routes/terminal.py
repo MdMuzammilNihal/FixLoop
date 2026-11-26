@@ -2,6 +2,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import docker
 import uuid
 import os
+import shutil
 import asyncio
 
 router = APIRouter()
@@ -45,7 +46,7 @@ async def terminal_ws(websocket: WebSocket):
         async def read_from_container():
             while True:
                 try:
-                    data = sock.recv(4096)
+                    data = await asyncio.to_thread(sock.recv, 4096)
                     if not data:
                         break
                     await websocket.send_text(data.decode(errors='ignore'))
@@ -55,7 +56,7 @@ async def terminal_ws(websocket: WebSocket):
         while True:
             data = await websocket.receive_text()
             try:
-                sock.send(data.encode())
+                await asyncio.to_thread(sock.send, data.encode())
             except Exception:
                 break
     except WebSocketDisconnect:
@@ -70,6 +71,6 @@ async def terminal_ws(websocket: WebSocket):
         except Exception:
             pass
         try:
-            os.system(f"rm -rf {workspace_dir}")
+            shutil.rmtree(workspace_dir, ignore_errors=True)
         except Exception:
             pass 

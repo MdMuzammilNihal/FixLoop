@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Terminal } from 'xterm';
 import 'xterm/css/xterm.css';
 
-// Same origin as the page (Vite proxies /ws to the backend); the Electron app loads from file://
+// Same origin as the page (Vite proxies /ws to the backend)
 const WS_URL = window.location.protocol === 'file:'
   ? 'ws://localhost:8000/ws/terminal'
   : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/terminal`;
@@ -21,7 +21,12 @@ const PythonTerminal: React.FC = () => {
         foreground: '#ffffff',
       },
     });
-    term.open(terminalRef.current!);
+    // open on the next frame, once the container has been laid out (xterm throws on a zero-size element)
+    let opened = false;
+    const raf = requestAnimationFrame(() => {
+      opened = true;
+      term.open(terminalRef.current!);
+    });
     termObj.current = term;
 
     const ws = new WebSocket(WS_URL);
@@ -29,12 +34,10 @@ const PythonTerminal: React.FC = () => {
 
     ws.onopen = () => {
       term.writeln('Connected to Python Terminal!');
-      term.write('\r\n>>> ');
     };
 
     ws.onmessage = (event) => {
       term.write(event.data);
-      term.write('\r\n>>> ');
     };
 
     ws.onclose = () => {
@@ -46,8 +49,10 @@ const PythonTerminal: React.FC = () => {
     });
 
     return () => {
+      cancelAnimationFrame(raf);
       ws.close();
-      term.dispose();
+      if (opened) setTimeout(() => term.dispose(), 250);
+      else term.dispose();
     };
   }, []);
 

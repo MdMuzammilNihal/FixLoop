@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 # Origins allowed to call the API from a browser. Override with a comma-separated list, e.g.
 #   FIXLOOP_CORS_ORIGINS="https://my-frontend.example.com"
-# "null" is the origin of the Electron app, which loads the UI from a file:// URL.
+# "null" covers pages opened from a file:// URL.
 DEFAULT_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
