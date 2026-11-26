@@ -194,16 +194,6 @@ def simplify_prompt(prompt, language):
     else:
         return prompt
 
-def select_fallback_model(primary_model):
-    fallback_options = {
-        "llama3": "codellama:latest",
-        "codellama": "llama3:latest",
-        "llama2": "codellama:latest",
-        "mistral": "codellama:latest"
-    }
-    base_model = primary_model.split(':')[0]
-    return fallback_options.get(base_model, "llama3:latest")
-
 def build_prompt(action, code, language):
     if action == "analyze":
         return (
@@ -243,13 +233,15 @@ def build_prompt(action, code, language):
 
 # --- Ollama LLM Generation Helper ---
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3")
-OLLAMA_CODE_MODEL = os.getenv("OLLAMA_CODE_MODEL", "codellama")
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+# Low temperature: code fixing needs precision, and it makes answers repeatable (and cacheable).
+OLLAMA_TEMPERATURE = float(os.getenv("FIXLOOP_TEMPERATURE", "0.2"))
 logger = logging.getLogger(__name__)
 
-async def ollama_generate(prompt: str, model: str = OLLAMA_MODEL, max_tokens: int = 2048, timeout: float = 90.0, task: str = None, language: str = None):
+async def ollama_generate(prompt: str, model: str = OLLAMA_MODEL, max_tokens: int = 2048, timeout: float = 90.0, task: str = None, language: str = None, temperature: float = None):
     """Generate text with Ollama in non-streaming mode. Successful responses are cached."""
-    cache_key = cache_manager.make_key(OLLAMA_BASE_URL, model, max_tokens, prompt)
+    temperature = OLLAMA_TEMPERATURE if temperature is None else temperature
+    cache_key = cache_manager.make_key(OLLAMA_BASE_URL, model, max_tokens, temperature, prompt)
     cached = cache_manager.get(cache_key)
     if cached is not None:
         return cached
@@ -263,7 +255,7 @@ async def ollama_generate(prompt: str, model: str = OLLAMA_MODEL, max_tokens: in
                     "stream": False,
                     "options": {
                         "num_predict": max_tokens,
-                        "temperature": 0.7
+                        "temperature": temperature
                     }
                 }
             )
@@ -288,7 +280,7 @@ async def ollama_stream(prompt: str, model: str = OLLAMA_MODEL, max_tokens: int 
                 "model": model,
                 "prompt": prompt,
                 "stream": True,
-                "options": {"num_predict": max_tokens, "temperature": 0.7},
+                "options": {"num_predict": max_tokens, "temperature": OLLAMA_TEMPERATURE},
             },
         ) as response:
             if response.status_code != 200:
@@ -330,7 +322,7 @@ async def analyze_code(code: str, language: str):
     """Analyze code for errors, warnings, and suggestions with category-based organization. Always returns a structured response with all keys."""
     prompt = f"""You are a professional code analyzer with expertise in {language}. Analyze this code carefully for bugs, inefficiencies, and style issues. Be thorough and comprehensive.\n\nCode to analyze:\n```{language}\n{code}\n```\n\nLook for these specific categories of issues and provide detailed analysis for each:\n1. SYNTAX ERRORS: Code that will not compile or run due to language syntax violations\n2. LOGIC BUGS: Incorrect program logic, off-by-one errors, incorrect conditions, edge cases\n3. SECURITY VULNERABILITIES: Injection risks, unsafe operations, authentication issues\n4. PERFORMANCE INEFFICIENCIES: Time/space complexity issues, redundant operations, excessive memory usage\n5. STYLE VIOLATIONS: Naming conventions, indentation, code organization, readability issues\n6. DESIGN ISSUES: Poor architecture, tight coupling, violating design principles\n7. INPUT VALIDATION: Missing or improper validation of user inputs or data\n8. ERROR HANDLING: Missing or improper error handling, silent failures\n9. POTENTIAL EDGE CASES: Boundary conditions that may cause issues\n\nFormat your analysis with the following structure:\n1. First provide a brief summary of the code and its purpose (1-2 sentences)\n2. Then list issues in these categories:\n   - ERRORS: Critical bugs that will cause the code to fail (syntax errors, runtime crashes)\n   - WARNINGS: Issues that don't break the code but could cause problems (logic bugs, performance issues)\n   - SUGGESTIONS: Ways to improve the code quality, readability, or performance\n\nFor each issue identified, use this format:\n- CATEGORY - [LINE X]: Brief description of the issue\n  * IMPACT: How serious is this issue and what problems might it cause\n  * FIX: A specific, actionable recommendation to fix the issue\n  * EXAMPLE: Brief code example showing how to fix the issue (when applicable)\n\nUse specific line numbers whenever possible to help locate issues.\n"""
     max_tokens = estimate_max_tokens(prompt)
-    result = await ollama_generate(prompt, OLLAMA_CODE_MODEL, max_tokens, timeout=60.0, task="analyze", language=language)
+    result = await ollama_generate(prompt, OLLAMA_MODEL, max_tokens, timeout=60.0, task="analyze", language=language)
     logger.info(f"[DEBUG] LLM analyze_code output: {result}")
     try:
         if not isinstance(result, str) or result.startswith("Error") or result.startswith("Ollama is not available"):
@@ -468,7 +460,7 @@ async def optimize_code(code: str, language: str):
     max_tokens = estimate_max_tokens(prompt) + 1024
     result = await ollama_generate(
         prompt, 
-        OLLAMA_CODE_MODEL, 
+        OLLAMA_MODEL, 
         max_tokens, 
         timeout=180.0,  # Longer timeout for optimization
         task="optimize", 
@@ -747,12 +739,12 @@ async def generate_hints(code: str, language: str):
     """Generate exactly 5 clear, actionable hints for improving code without giving the full solution."""
     prompt = f"""You are a coding teacher. Give exactly 5 clear, actionable, and non-overlapping hints to improve this {language} code without providing the complete solution. Each hint should be concise, specific, and helpful for a student to improve their code. Do not provide the full solution or repeat hints.\n\n```{language}\n{code}\n```\n\nFormat your response as a numbered list of exactly 5 hints, each on a new line. Do not provide the full solution. Do not repeat hints. Do not include explanations, just the hints themselves.\n"""
     max_tokens = estimate_max_tokens(prompt)
-    result = await ollama_generate(prompt, OLLAMA_CODE_MODEL, max_tokens, timeout=45.0, task="hint", language=language)
+    result = await ollama_generate(prompt, OLLAMA_MODEL, max_tokens, timeout=45.0, task="hint", language=language)
     logger.info(f"[DEBUG] LLM generate_hints output: {result}")
     hints = []
     for line in result.split('\n'):
         line = line.strip()
-        if line and (re.match(r'^[1-5]\\. ', line) or re.match(r'^- ', line)):
+        if line and (re.match(r'^[1-5]\. ', line) or re.match(r'^- ', line)):
             hints.append(line)
     if len(hints) < 5:
         hints = [l.strip() for l in result.split('\n') if l.strip()][:5]
@@ -764,14 +756,50 @@ async def generate_hints(code: str, language: str):
         "hints": hints
     }
 
+def python_lint(code: str, limit: int = 8):
+    """Static analysis with pyflakes: cheap, deterministic hints about real defects
+    (undefined names, syntax errors, ...). Returns short strings like "line 4: undefined name 'ss'"."""
+    try:
+        from pyflakes import api as pyflakes_api, reporter as pyflakes_reporter
+    except ImportError:
+        return []
+    import io
+    out, err = io.StringIO(), io.StringIO()
+    pyflakes_api.check(code, "snippet.py", pyflakes_reporter.Reporter(out, err))
+    findings = []
+    for raw in (out.getvalue() + err.getvalue()).splitlines():
+        parts = raw.split(":", 3)
+        if len(parts) < 4 or not parts[0].endswith("snippet.py"):
+            continue  # continuation lines (source excerpts, carets)
+        message = parts[3].strip()
+        if "imported but unused" in message or "never used" in message:
+            continue  # noise: does not explain a bug
+        findings.append(f"line {parts[1]}: {message}")
+    return findings[:limit]
+
+
 async def fix_code(code: str, language: str, extra_context: str = ""):
-    """Fix bugs and issues in the code with enhanced bug detection and categorization. Requires handling of edge cases."""
-    prompt = f"""You are an expert programmer. Fix all bugs and issues in this {language} code:\n\n```{language}\n{code}\n```\n\nFirst identify the bugs/issues, then provide the complete fixed code.\n\nIMPORTANT FORMATTING INSTRUCTIONS:\n1. Start your explanation with "Explanation:" on its own line\n2. List each identified bug/issue under "Bugs Found:" with format "- BUG: description"\n3. For each bug, explain the root cause and how it was fixed under "- FIX: explanation"\n4. After your explanation, ALWAYS include the fixed code inside a code block\n5. Start the fixed code section with "Fixed Code:" on its own line\n6. Format the fixed code in a code block starting with ```{language} and ending with ```\n7. Do not omit any parts of the code - provide the complete fixed version\n8. **Explicitly handle edge cases such as empty lists, None values, empty dicts/sets, and invalid input. If the code processes a list, dict, set, or sequence, always add a check for empty or None at the start of the function.**\n\nExample format:\nExplanation:\nThe code contains several bugs that need to be fixed.\n\nBugs Found:\n- BUG: Description of first bug\n- FIX: How the first bug was fixed\n- BUG: Description of second bug\n- FIX: How the second bug was fixed\n\nFixed Code:\n```{language}\n(Complete fixed code here)\n```\n"""
+    """Fix bugs in the code. Static-analysis findings (Python) and extra context are added to the prompt."""
+    prompt = (
+        f"You are an expert {language} programmer. The code below has a bug. Fix it.\n\n"
+        f"```{language}\n{code}\n```\n\n"
+        "Rules:\n"
+        "- Make the smallest change that fixes the bug. Keep function names, signatures and all other behavior unchanged.\n"
+        "- Do not add features, validation, type checks or comments that are not needed to fix the bug.\n"
+        "- If the code crashes on some input (for example an empty list or a missing key), handle that case gracefully.\n"
+        "- Return the complete fixed code, not a fragment.\n\n"
+        "Answer in exactly this format:\n"
+        "Explanation:\n<one to three sentences>\n\n"
+        f"Fixed Code:\n```{language}\n<complete fixed code>\n```\n"
+    )
+    findings = python_lint(code) if language.lower() == "python" else []
+    if findings:
+        prompt += "\nStatic analysis of the original code reported:\n" + "\n".join(f"- {f}" for f in findings) + "\n"
     if extra_context:
         prompt += "\n\nAdditional context to take into account:\n" + extra_context + "\n"
     max_tokens = estimate_max_tokens(prompt) + 1024
     start_time = time.time()
-    result = await ollama_generate(prompt, OLLAMA_CODE_MODEL, max_tokens, timeout=120.0, task="fix", language=language)
+    result = await ollama_generate(prompt, OLLAMA_MODEL, max_tokens, timeout=120.0, task="fix", language=language)
     logger.info(f"[DEBUG] LLM fix_code output: {result}")
     try:
         explanation = ""
@@ -830,39 +858,6 @@ async def fix_code(code: str, language: str, extra_context: str = ""):
         if not fixed_code:
             fixed_code = code
             explanation = "Could not generate a fix for the provided code."
-        var_types = [
-            ("list", ["numbers", "lst", "arr", "array", "values", "items", "data", "nums"]),
-            ("dict", ["d", "mydict", "mapping", "dict", "dictionary", "lookup"]),
-            ("set", ["s", "myset", "set", "unique_items"])
-        ]
-        needs_edge_case = None
-        needs_type = None
-        for typ, varnames in var_types:
-            for var in varnames:
-                if re.search(rf"def \\w+\\(.*{var}.*\\):", fixed_code):
-                    needs_edge_case = var
-                    needs_type = typ
-                    break
-            if needs_edge_case:
-                break
-        if needs_edge_case:
-            lines = fixed_code.split('\n')
-            for i, line in enumerate(lines):
-                if line.strip().startswith('def ') and needs_edge_case in line:
-                    insert_at = i + 1
-                    while insert_at < len(lines) and (lines[insert_at].strip().startswith('"""') or lines[insert_at].strip().startswith("'''") or not lines[insert_at].strip() or lines[insert_at].strip().startswith('#')):
-                        insert_at += 1
-                    check_line = f"    if not {needs_edge_case} or {needs_edge_case} is None:"
-                    if needs_type == "dict":
-                        check_line += f"\n        return {{}}  # Added by FixLoop: handle empty dict edge case"
-                    elif needs_type == "set":
-                        check_line += f"\n        return set()  # Added by FixLoop: handle empty set edge case"
-                    else:
-                        check_line += f"\n        return 0  # Added by FixLoop: handle empty list edge case"
-                    lines.insert(insert_at, check_line)
-                    break
-            fixed_code = '\n'.join(lines)
-            explanation += f"\n[FixLoop: Added explicit check for empty/None {needs_type} variable '{needs_edge_case}' to guarantee edge case handling.]"
         diff_summary = {}  # You can implement generate_diff_summary if needed
         response_data = {
             "original_code": code,
@@ -903,7 +898,16 @@ async def fix_code_self_correcting(code: str, language: str, max_attempts: int =
     The result carries an ``attempts`` list describing every try.
     """
     attempts = []
-    feedback = extra_context
+    base_context = extra_context
+    if verify_execution and language.lower() == "python":
+        # Run the original code first so the model sees the real error instead of guessing.
+        original_run = await execute_python_code(code)
+        trace = (original_run.get("stderr") or "").strip()[-800:]
+        if original_run.get("exit_code") not in (0, None) and trace:
+            base_context = (base_context + "\n" if base_context else "") + (
+                "Running the original code fails with this error:\n" + trace
+            )
+    feedback = base_context
     result = None
     for attempt in range(1, max_attempts + 1):
         result = await fix_code(code, language, extra_context=feedback)
@@ -918,7 +922,7 @@ async def fix_code_self_correcting(code: str, language: str, max_attempts: int =
         attempts.append({"attempt": attempt, "ok": problem is None, "problem": problem})
         if problem is None:
             break
-        feedback = (extra_context + "\n" if extra_context else "") + (
+        feedback = (base_context + "\n" if base_context else "") + (
             f"Your previous fix failed verification with this error:\n{problem}\n"
             f"Previous attempt:\n```{language}\n{fixed}\n```\nFix it properly this time."
         )

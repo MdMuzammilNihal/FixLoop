@@ -156,6 +156,40 @@ def test_stream_emits_chunks(client, monkeypatch):
     assert "".join(e["content"] for e in events if e["type"] == "chunk") == "Hello"
 
 
+# ---------- chat ----------
+def test_chat_streams_plain_text(client, monkeypatch):
+    seen = {}
+
+    async def available():
+        return True
+
+    async def fake_stream(prompt, model, max_tokens, *a, **k):
+        seen["prompt"] = prompt
+        for piece in ["Hel", "lo"]:
+            yield piece
+
+    monkeypatch.setattr(code_services, "check_ollama_available", available)
+    monkeypatch.setattr(code_services, "ollama_stream", fake_stream)
+    r = client.post("/api/chat", json={"message": "Explain", "code": "print(1)"})
+    assert r.status_code == 200 and r.text == "Hello"
+    assert "print(1)" in seen["prompt"]
+
+
+def test_chat_rejects_empty_message(client):
+    assert client.post("/api/chat", json={"message": "  "}).status_code == 400
+
+
+def test_hint_parser_keeps_numbered_lines(client, monkeypatch):
+    async def fake_generate(*a, **k):
+        return "Intro line\n1. one\n2. two\n3. three\n4. four\n5. five\n"
+
+    monkeypatch.setattr(logic_services, "ollama_generate", fake_generate)
+    import asyncio
+
+    hints = asyncio.run(logic_services.generate_hints("x=1", "python"))["hints"]
+    assert hints == ["1. one", "2. two", "3. three", "4. four", "5. five"]
+
+
 # ---------- cache ----------
 def test_cache_roundtrip_and_clear(client):
     key = cache_manager.make_key("model", "prompt")
@@ -199,6 +233,85 @@ async def test_ollama_generate_uses_cache(monkeypatch):
     second = await logic_services.ollama_generate("unique prompt 123", "llama3", 64)
     assert first == second == "cached text"
     assert len(calls) == 1
+
+
+# ---------- fix accuracy improvements ----------
+FIX_REPLY = "Explanation:\nok\n\nFixed Code:\n```python\ndef total(numbers):\n    return sum(numbers)\n```"
+
+
+@pytest.mark.asyncio
+async def test_fix_prompt_includes_static_analysis(monkeypatch):
+    seen = []
+
+    async def fake(prompt, *a, **k):
+        seen.append(prompt)
+        return FIX_REPLY
+
+    monkeypatch.setattr(logic_services, "ollama_generate", fake)
+    await logic_services.fix_code("def total(p):\n    s = 0\n    for x in p:\n        ss += x\n    return s", "python")
+    assert "undefined name 'ss'" in seen[0]
+
+
+@pytest.mark.asyncio
+async def test_fix_output_is_not_rewritten(monkeypatch):
+    async def fake(prompt, *a, **k):
+        return FIX_REPLY
+
+    monkeypatch.setattr(logic_services, "ollama_generate", fake)
+    result = await logic_services.fix_code("def total(numbers):\n    return sum(numbers) +", "python")
+    assert result["fixed_code"] == "def total(numbers):\n    return sum(numbers)"
+    assert "Added by FixLoop" not in result["fixed_code"]
+
+
+@pytest.mark.asyncio
+async def test_traceback_is_fed_to_model_only_when_execution_enabled(monkeypatch):
+    seen = []
+
+    async def fake(prompt, *a, **k):
+        seen.append(prompt)
+        return FIX_REPLY
+
+    monkeypatch.setattr(logic_services, "ollama_generate", fake)
+    crashing = "def f():\n    return 1 / 0\n\nf()"
+
+    await logic_services.fix_code_self_correcting(crashing, "python", verify_execution=False)
+    assert "ZeroDivisionError" not in seen[0], "code must not be run unless execution is enabled"
+
+    seen.clear()
+    await logic_services.fix_code_self_correcting(crashing, "python", verify_execution=True)
+    assert "Running the original code fails" in seen[0] and "ZeroDivisionError" in seen[0]
+
+
+@pytest.mark.asyncio
+async def test_temperature_is_low_by_default_and_part_of_cache_key(monkeypatch):
+    sent = []
+
+    class FakeResponse:
+        status_code = 200
+
+        def json(self):
+            return {"response": "text"}
+
+    class FakeClient:
+        def __init__(self, *a, **k):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *a):
+            return False
+
+        async def post(self, url, json=None, **k):
+            sent.append(json["options"]["temperature"])
+            return FakeResponse()
+
+    monkeypatch.setattr(logic_services.httpx, "AsyncClient", FakeClient)
+    cache_manager.clear_cache()
+    await logic_services.ollama_generate("temperature prompt", "m", 64)
+    await logic_services.ollama_generate("temperature prompt", "m", 64, temperature=0.9)
+    assert sent == [logic_services.OLLAMA_TEMPERATURE, 0.9]
+    assert logic_services.OLLAMA_TEMPERATURE <= 0.3
 
 
 # ---------- terminal without Docker ----------

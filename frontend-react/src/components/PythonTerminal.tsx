@@ -2,7 +2,10 @@ import React, { useEffect, useRef } from 'react';
 import { Terminal } from 'xterm';
 import 'xterm/css/xterm.css';
 
-const WS_URL = 'ws://localhost:8000/ws/terminal';
+// Same origin as the page (Vite proxies /ws to the backend); the Electron app loads from file://
+const WS_URL = window.location.protocol === 'file:'
+  ? 'ws://localhost:8000/ws/terminal'
+  : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/terminal`;
 
 const PythonTerminal: React.FC = () => {
   const terminalRef = useRef<HTMLDivElement>(null);
@@ -39,7 +42,7 @@ const PythonTerminal: React.FC = () => {
     };
 
     term.onData((data) => {
-      ws.send(data);
+      if (ws.readyState === WebSocket.OPEN) ws.send(data);
     });
 
     return () => {

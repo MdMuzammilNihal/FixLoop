@@ -6,6 +6,7 @@ let backendProcess;
 
 function createWindow () {
   const win = new BrowserWindow({
+    title: 'FixLoop',
     width: 1200,
     height: 800,
     webPreferences: {
@@ -21,8 +22,8 @@ function createWindow () {
 app.whenReady().then(() => {
   // Start the Python backend
   backendProcess = spawn('python', [
-    path.join(__dirname, 'backend', 'api', 'fixloop.py')
-  ], { stdio: 'inherit' });
+    '-m', 'uvicorn', 'backend.main:app', '--port', '8000'
+  ], { stdio: 'inherit', cwd: __dirname });
 
   createWindow();
 

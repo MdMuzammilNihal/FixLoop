@@ -13,12 +13,14 @@ interface EditorProps {
 
 export const Editor: React.FC<EditorProps> = ({ value, language, onChange, onRun }) => {
   const editorRef = useRef<any>(null);
+  const onRunRef = useRef(onRun);
+  onRunRef.current = onRun;
 
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
     editor.addCommand(
       monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
-      () => onRun()
+      () => onRunRef.current()
     );
   };
 
@@ -26,7 +28,7 @@ export const Editor: React.FC<EditorProps> = ({ value, language, onChange, onRun
     <div className="flex-1 min-w-0 h-full bg-background rounded-2xl shadow-lg overflow-hidden flex flex-col">
       <MonacoEditor
         height="80%"
-        defaultLanguage={language}
+        language={language}
         value={value}
         onChange={onChange}
         theme="vs-dark"

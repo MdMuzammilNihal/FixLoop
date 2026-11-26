@@ -33,10 +33,10 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(({ output }, ref) => 
       });
       xtermRef.current.open(terminalRef.current);
     }
-    // Only append new output
+    // Re-render the whole output so a new run replaces the previous one
     if (xtermRef.current && output !== lastOutputRef.current) {
-      const newOutput = output.replace(lastOutputRef.current, '');
-      xtermRef.current.write(newOutput.replace(/\n/g, '\r\n'));
+      xtermRef.current.reset();
+      xtermRef.current.write(output.replace(/\r?\n/g, '\r\n'));
       xtermRef.current.scrollToBottom();
       lastOutputRef.current = output;
     }
@@ -46,7 +46,7 @@ const Terminal = forwardRef<TerminalHandle, TerminalProps>(({ output }, ref) => 
     <div style={{ position: 'relative' }}>
       <button
         style={{ position: 'absolute', right: 10, top: 10, zIndex: 2 }}
-        onClick={() => xtermRef.current?.clear()}
+        onClick={() => { xtermRef.current?.reset(); lastOutputRef.current = ''; }}
       >
         Clear
       </button>

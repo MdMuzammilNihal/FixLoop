@@ -93,14 +93,15 @@ async def run_case(c):
     return out
 
 
-def summarize(results, model):
+def summarize(results, model, temperature):
     def rate(rows, cond):
         n = len(rows)
         k = sum(1 for r in rows if r[cond]["pass"])
         return k, n
 
     lines = [f"# Benchmark results", "",
-             f"Model: `{model}` | cases: {len(results)} | one run, temperature 0.7 (results vary run to run)", "",
+             f"Model: `{model}` | cases: {len(results)} | one run, temperature {temperature} "
+             "(results vary run to run)", "",
              "| Group | n | A baseline | B syntax retry | C execution retry |", "|---|---|---|---|---|"]
     groups = [("All", results),
               ("Crash bugs", [r for r in results if r["kind"] == "crash"]),
@@ -137,12 +138,13 @@ async def main():
     if not selfcheck():
         sys.exit("Fix the invalid cases first.")
 
-    from backend.api.services.logic_services import OLLAMA_CODE_MODEL, check_ollama_available
+    from backend.api.services.logic_services import OLLAMA_MODEL, OLLAMA_TEMPERATURE, check_ollama_available
     if not await check_ollama_available():
         sys.exit("Ollama is not reachable; start it and pull the model first.")
 
-    os.makedirs(RESULTS_DIR, exist_ok=True)
-    json_path = os.path.join(RESULTS_DIR, "results.json")
+    model_dir = RESULTS_DIR
+    os.makedirs(model_dir, exist_ok=True)
+    json_path = os.path.join(model_dir, "results.json")
     done = {}
     if os.path.exists(json_path) and not args.limit:
         for r in json.load(open(json_path, encoding="utf-8")).get("results", []):
@@ -164,13 +166,13 @@ async def main():
         print(f"[{i}/{len(cases)}] {c['id']:24} A={r['A']['pass']!s:5} B={r['B']['pass']!s:5} "
               f"C={r['C']['pass']!s:5} (C attempts: {r['C']['attempts']})", flush=True)
         if not args.limit:
-            json.dump({"model": OLLAMA_CODE_MODEL, "results": results},
+            json.dump({"model": OLLAMA_MODEL, "results": results},
                       open(json_path, "w", encoding="utf-8"), indent=1)
 
-    summary = summarize(results, OLLAMA_CODE_MODEL)
+    summary = summarize(results, OLLAMA_MODEL, OLLAMA_TEMPERATURE)
     print("\n" + summary)
     if not args.limit:
-        open(os.path.join(RESULTS_DIR, "results.md"), "w", encoding="utf-8").write(summary)
+        open(os.path.join(model_dir, "results.md"), "w", encoding="utf-8").write(summary)
 
 
 if __name__ == "__main__":

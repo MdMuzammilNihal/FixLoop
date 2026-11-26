@@ -1,18 +1,18 @@
 # Benchmark results
 
-Model: `codellama` | cases: 40 | one run, temperature 0.7 (results vary run to run)
+Model: `llama3` | cases: 40 | one run, temperature 0.2 (results vary run to run)
 
 | Group | n | A baseline | B syntax retry | C execution retry |
 |---|---|---|---|---|
-| All | 40 | 20/40 (50%) | 20/40 (50%) | 23/40 (58%) |
-| Crash bugs | 20 | 15/20 (75%) | 15/20 (75%) | 16/20 (80%) |
-| Logic bugs | 20 | 5/20 (25%) | 5/20 (25%) | 7/20 (35%) |
+| All | 40 | 32/40 (80%) | 32/40 (80%) | 32/40 (80%) |
+| Crash bugs | 20 | 19/20 (95%) | 19/20 (95%) | 19/20 (95%) |
+| Logic bugs | 20 | 13/20 (65%) | 13/20 (65%) | 13/20 (65%) |
 
 | Condition | mean attempts | mean seconds per case (B and C reuse A's cached first answer, so their time is only the extra retry time) |
 |---|---|---|
-| A baseline | 1.00 | 6.5 |
+| A baseline | 1.00 | 2.5 |
 | B syntax retry | 1.00 | 0.1 |
-| C execution retry | 1.27 | 2.1 |
+| C execution retry | 1.05 | 1.4 |
 
-Fixed only thanks to retries (C but not A): append_returns_none, reverse_drops_char, flatten_wrong_var
+Fixed only thanks to retries (C but not A): none
 Regressions (A but not C): none

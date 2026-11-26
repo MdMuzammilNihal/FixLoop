@@ -1,6 +1,5 @@
 # Run from the repository root:  docker compose -f docker/docker-compose.yml up --build
 # Then pull the models once:     docker compose -f docker/docker-compose.yml exec ollama ollama pull llama3
-#                                docker compose -f docker/docker-compose.yml exec ollama ollama pull codellama
 services:
   fixloop:
     build:
@@ -11,7 +10,6 @@ services:
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
       - OLLAMA_MODEL=llama3
-      - OLLAMA_CODE_MODEL=codellama
     depends_on:
       - ollama
     restart: unless-stopped

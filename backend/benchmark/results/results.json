@@ -1,5 +1,5 @@
 {
- "model": "codellama",
+ "model": "llama3",
  "results": [
   {
    "id": "avg_empty",
@@ -7,17 +7,17 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 6.424637794494629
+    "seconds": 7.640335559844971
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.05893564224243164
+    "seconds": 0.05591988563537598
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.13631319999694824
+    "seconds": 2.464246988296509
    }
   },
   {
@@ -26,17 +26,17 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 6.7804484367370605
+    "seconds": 2.2667903900146484
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.06562209129333496
+    "seconds": 0.054123640060424805
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.1134190559387207
+    "seconds": 2.752650499343872
    }
   },
   {
@@ -45,17 +45,17 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 5.322275638580322
+    "seconds": 2.216550588607788
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.06420636177062988
+    "seconds": 0.05821871757507324
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.12111425399780273
+    "seconds": 2.124854803085327
    }
   },
   {
@@ -64,17 +64,17 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 5.440377473831177
+    "seconds": 2.1540608406066895
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.06126546859741211
+    "seconds": 0.05483078956604004
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.13446617126464844
+    "seconds": 2.612663507461548
    }
   },
   {
@@ -83,17 +83,17 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 5.175990581512451
+    "seconds": 2.211041212081909
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.06075620651245117
+    "seconds": 0.06365752220153809
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.1291673183441162
+    "seconds": 3.1545369625091553
    }
   },
   {
@@ -102,17 +102,17 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 3.916362762451172
+    "seconds": 1.5493454933166504
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.05979728698730469
+    "seconds": 0.05680131912231445
    },
    "C": {
     "pass": true,
-    "attempts": 1,
-    "seconds": 0.12153816223144531
+    "attempts": 2,
+    "seconds": 3.5201973915100098
    }
   },
   {
@@ -121,17 +121,17 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 5.84346604347229
+    "seconds": 1.6980059146881104
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.06111001968383789
+    "seconds": 0.056626319885253906
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.1314103603363037
+    "seconds": 1.713104009628296
    }
   },
   {
@@ -140,17 +140,17 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 4.753026008605957
+    "seconds": 1.6395044326782227
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.06604194641113281
+    "seconds": 0.05731844902038574
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.12729811668395996
+    "seconds": 1.6564691066741943
    }
   },
   {
@@ -159,17 +159,17 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 4.918879508972168
+    "seconds": 2.516470432281494
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.05588698387145996
+    "seconds": 0.06402301788330078
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.1325221061706543
+    "seconds": 2.2915568351745605
    }
   },
   {
@@ -178,55 +178,55 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 8.023754119873047
+    "seconds": 2.02302885055542
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.058663368225097656
+    "seconds": 0.07986998558044434
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.15347552299499512
+    "seconds": 3.3259496688842773
    }
   },
   {
    "id": "int_parse",
    "kind": "crash",
    "A": {
-    "pass": true,
+    "pass": false,
     "attempts": 1,
-    "seconds": 5.415363073348999
+    "seconds": 2.0523929595947266
    },
    "B": {
-    "pass": true,
+    "pass": false,
     "attempts": 1,
-    "seconds": 0.05640721321105957
+    "seconds": 0.09181070327758789
    },
    "C": {
-    "pass": true,
+    "pass": false,
     "attempts": 1,
-    "seconds": 0.13540387153625488
+    "seconds": 2.6245107650756836
    }
   },
   {
    "id": "missing_file",
    "kind": "crash",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 7.730161905288696
+    "seconds": 2.8911383152008057
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.11708664894104004
+    "seconds": 0.09729576110839844
    },
    "C": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.18769407272338867
+    "seconds": 3.238212823867798
    }
   },
   {
@@ -235,55 +235,55 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 5.029877662658691
+    "seconds": 2.5413148403167725
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.04975104331970215
+    "seconds": 0.06526970863342285
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.1365807056427002
+    "seconds": 2.272296190261841
    }
   },
   {
    "id": "pairs_index",
    "kind": "crash",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 7.106669187545776
+    "seconds": 2.449587821960449
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.11331629753112793
+    "seconds": 0.06303977966308594
    },
    "C": {
-    "pass": false,
-    "attempts": 3,
-    "seconds": 16.897618532180786
+    "pass": true,
+    "attempts": 1,
+    "seconds": 2.4464802742004395
    }
   },
   {
    "id": "initials_double_space",
    "kind": "crash",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 4.614523410797119
+    "seconds": 2.1819980144500732
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.10393333435058594
+    "seconds": 0.06290483474731445
    },
    "C": {
-    "pass": false,
-    "attempts": 3,
-    "seconds": 17.26175332069397
+    "pass": true,
+    "attempts": 1,
+    "seconds": 2.179870367050171
    }
   },
   {
@@ -292,17 +292,17 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 9.580376148223877
+    "seconds": 2.701054096221924
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.09642505645751953
+    "seconds": 0.06093788146972656
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.1386253833770752
+    "seconds": 3.1216421127319336
    }
   },
   {
@@ -311,17 +311,17 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 4.817154169082642
+    "seconds": 1.965083360671997
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.057859182357788086
+    "seconds": 0.05616331100463867
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.13180184364318848
+    "seconds": 1.9818377494812012
    }
   },
   {
@@ -330,55 +330,55 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 6.92715048789978
+    "seconds": 2.592189311981201
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.058084964752197266
+    "seconds": 0.0615537166595459
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.12564516067504883
+    "seconds": 2.40948748588562
    }
   },
   {
    "id": "append_returns_none",
    "kind": "crash",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 6.289086580276489
+    "seconds": 2.4496757984161377
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.10787129402160645
+    "seconds": 0.0630350112915039
    },
    "C": {
     "pass": true,
     "attempts": 2,
-    "seconds": 3.364290237426758
+    "seconds": 5.782536029815674
    }
   },
   {
    "id": "tuple_assignment",
    "kind": "crash",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 6.642571449279785
+    "seconds": 2.458543539047241
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.09928774833679199
+    "seconds": 0.05554628372192383
    },
    "C": {
-    "pass": false,
-    "attempts": 3,
-    "seconds": 11.04538345336914
+    "pass": true,
+    "attempts": 1,
+    "seconds": 2.1633658409118652
    }
   },
   {
@@ -387,17 +387,17 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 5.884017705917358
+    "seconds": 2.7220265865325928
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.05895376205444336
+    "seconds": 0.06112504005432129
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.1291792392730713
+    "seconds": 0.16889548301696777
    }
   },
   {
@@ -406,17 +406,17 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 4.734445810317993
+    "seconds": 2.049212694168091
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.0649557113647461
+    "seconds": 0.06426072120666504
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.12024211883544922
+    "seconds": 0.15447235107421875
    }
   },
   {
@@ -425,36 +425,36 @@
    "A": {
     "pass": false,
     "attempts": 1,
-    "seconds": 5.102139949798584
+    "seconds": 2.957217216491699
    },
    "B": {
     "pass": false,
     "attempts": 1,
-    "seconds": 0.09863018989562988
+    "seconds": 0.09141969680786133
    },
    "C": {
     "pass": false,
     "attempts": 1,
-    "seconds": 0.1741349697113037
+    "seconds": 0.235518217086792
    }
   },
   {
    "id": "reverse_drops_char",
    "kind": "logic",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 7.638997554779053
+    "seconds": 1.8799495697021484
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.10136127471923828
+    "seconds": 0.07289838790893555
    },
    "C": {
     "pass": true,
-    "attempts": 3,
-    "seconds": 16.422335624694824
+    "attempts": 1,
+    "seconds": 0.18536138534545898
    }
   },
   {
@@ -463,55 +463,55 @@
    "A": {
     "pass": false,
     "attempts": 1,
-    "seconds": 9.288912773132324
+    "seconds": 2.42814040184021
    },
    "B": {
     "pass": false,
     "attempts": 1,
-    "seconds": 0.09594893455505371
+    "seconds": 0.11455655097961426
    },
    "C": {
     "pass": false,
     "attempts": 1,
-    "seconds": 0.15242528915405273
+    "seconds": 0.21424627304077148
    }
   },
   {
    "id": "sum_to_exclusive",
    "kind": "logic",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 7.7945027351379395
+    "seconds": 2.3393216133117676
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.09637069702148438
+    "seconds": 0.05764007568359375
    },
    "C": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.1570758819580078
+    "seconds": 0.18754935264587402
    }
   },
   {
    "id": "vowels_missing_u",
    "kind": "logic",
    "A": {
-    "pass": true,
+    "pass": false,
     "attempts": 1,
-    "seconds": 8.59175419807434
+    "seconds": 2.2124860286712646
    },
    "B": {
-    "pass": true,
+    "pass": false,
     "attempts": 1,
-    "seconds": 0.07243156433105469
+    "seconds": 0.10378623008728027
    },
    "C": {
-    "pass": true,
+    "pass": false,
     "attempts": 1,
-    "seconds": 0.13967323303222656
+    "seconds": 0.20913457870483398
    }
   },
   {
@@ -520,17 +520,17 @@
    "A": {
     "pass": true,
     "attempts": 1,
-    "seconds": 7.946072340011597
+    "seconds": 2.2703351974487305
    },
    "B": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.05752968788146973
+    "seconds": 0.06120705604553223
    },
    "C": {
     "pass": true,
     "attempts": 1,
-    "seconds": 0.12491154670715332
+    "seconds": 0.15007829666137695
    }
   },
   {
@@ -539,74 +539,74 @@
    "A": {
     "pass": false,
     "attempts": 1,
-    "seconds": 7.318009614944458
+    "seconds": 3.5619215965270996
    },
    "B": {
     "pass": false,
     "attempts": 1,
-    "seconds": 0.11126446723937988
+    "seconds": 0.10273003578186035
    },
    "C": {
     "pass": false,
     "attempts": 1,
-    "seconds": 0.15944290161132812
+    "seconds": 0.20241999626159668
    }
   },
   {
    "id": "dedupe_loses_order",
    "kind": "logic",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 6.143516540527344
+    "seconds": 2.027060031890869
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.09566140174865723
+    "seconds": 0.06977963447570801
    },
    "C": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.15804386138916016
+    "seconds": 0.18546724319458008
    }
   },
   {
    "id": "clamp_swapped",
    "kind": "logic",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 9.78049373626709
+    "seconds": 2.4570202827453613
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.09118986129760742
+    "seconds": 0.0601654052734375
    },
    "C": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.1526038646697998
+    "seconds": 0.1690673828125
    }
   },
   {
    "id": "celsius_to_f",
    "kind": "logic",
    "A": {
-    "pass": true,
+    "pass": false,
     "attempts": 1,
-    "seconds": 5.998461484909058
+    "seconds": 2.545297145843506
    },
    "B": {
-    "pass": true,
+    "pass": false,
     "attempts": 1,
-    "seconds": 0.0604550838470459
+    "seconds": 0.10179781913757324
    },
    "C": {
-    "pass": true,
+    "pass": false,
     "attempts": 1,
-    "seconds": 0.1304762363433838
+    "seconds": 0.19635653495788574
    }
   },
   {
@@ -615,36 +615,36 @@
    "A": {
     "pass": false,
     "attempts": 1,
-    "seconds": 7.186439037322998
+    "seconds": 2.6872448921203613
    },
    "B": {
     "pass": false,
     "attempts": 1,
-    "seconds": 0.08905220031738281
+    "seconds": 0.10721540451049805
    },
    "C": {
     "pass": false,
     "attempts": 1,
-    "seconds": 0.16268515586853027
+    "seconds": 0.21911406517028809
    }
   },
   {
    "id": "flatten_wrong_var",
    "kind": "logic",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 7.432826042175293
+    "seconds": 2.2900311946868896
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.09794425964355469
+    "seconds": 0.063018798828125
    },
    "C": {
     "pass": true,
-    "attempts": 3,
-    "seconds": 12.22163200378418
+    "attempts": 1,
+    "seconds": 0.18830132484436035
    }
   },
   {
@@ -653,112 +653,112 @@
    "A": {
     "pass": false,
     "attempts": 1,
-    "seconds": 7.387805223464966
+    "seconds": 1.954082727432251
    },
    "B": {
     "pass": false,
     "attempts": 1,
-    "seconds": 0.09823131561279297
+    "seconds": 0.09018540382385254
    },
    "C": {
     "pass": false,
     "attempts": 1,
-    "seconds": 0.16423487663269043
+    "seconds": 0.20896005630493164
    }
   },
   {
    "id": "leap_year",
    "kind": "logic",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 6.222000360488892
+    "seconds": 2.760096549987793
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.10478377342224121
+    "seconds": 0.06120920181274414
    },
    "C": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.1929783821105957
+    "seconds": 0.17568588256835938
    }
   },
   {
    "id": "gcd_returns_zero",
    "kind": "logic",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 4.6193060874938965
+    "seconds": 2.73294997215271
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.1036221981048584
+    "seconds": 0.06914424896240234
    },
    "C": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.19200634956359863
+    "seconds": 0.1874830722808838
    }
   },
   {
    "id": "chunk_drops_tail",
    "kind": "logic",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 9.773801326751709
+    "seconds": 2.622056722640991
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.10683631896972656
+    "seconds": 0.05749058723449707
    },
    "C": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.17539763450622559
+    "seconds": 0.1832141876220703
    }
   },
   {
    "id": "title_case_words",
    "kind": "logic",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 5.398380517959595
+    "seconds": 2.02691650390625
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.09027576446533203
+    "seconds": 0.06216573715209961
    },
    "C": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.18646669387817383
+    "seconds": 0.158494234085083
    }
   },
   {
    "id": "running_sum_lag",
    "kind": "logic",
    "A": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 6.717987537384033
+    "seconds": 3.225187301635742
    },
    "B": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.08907270431518555
+    "seconds": 0.05775952339172363
    },
    "C": {
-    "pass": false,
+    "pass": true,
     "attempts": 1,
-    "seconds": 0.1588139533996582
+    "seconds": 0.19101929664611816
    }
   }
  ]

@@ -1,11 +1,7 @@
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import './index.css';
 import Toolbar from './Toolbar';
-import EditorContainer from './EditorContainer';
-import ResultsTabs from './ResultsTabs';
 import InputSection from './InputSection';
-import EvaluationModal from './EvaluationModal';
-import LoadingSpinner from './LoadingSpinner';
 import './AppLayout.css';
 import Header from './components/Header';
 import Sidebar from './components/Sidebar';
@@ -118,6 +114,9 @@ const App: React.FC = () => {
   // --- Other State ---
   const [darkMode, setDarkMode] = useState(true);
   const [language, setLanguage] = useState('python');
+  useEffect(() => {
+    document.documentElement.classList.toggle('theme-light', !darkMode);
+  }, [darkMode]);
   const [showInput, setShowInput] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [output, setOutput] = useState('');
@@ -159,9 +158,14 @@ const App: React.FC = () => {
     setSuggestions('');
     setRunOutput('');
     setActiveTab('output');
+    if (action === 'execute' && language !== 'python') {
+      setRunOutput('Execution is only supported for Python. Switch the language to Python to run code.');
+      setLoading(false);
+      return;
+    }
     try {
       // Always use Python for execution
-      const langToSend = action === 'execute' ? 'python' : language;
+      const langToSend = language;
       const response = await fetch('/api/code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -173,11 +177,15 @@ const App: React.FC = () => {
         })
       });
       const data = await response.json();
-      if (action === 'execute' && data.execution_result) {
-        setRunOutput(
-          (data.execution_result.stdout || '') +
-          (data.execution_result.stderr ? '\n' + data.execution_result.stderr : '')
-        );
+      if (!response.ok || data.error) {
+        const message = Array.isArray(data.error) ? data.error.join('\n') : (data.error || data.detail || `Request failed (${response.status})`);
+        setErrors(String(message));
+        setActiveTab('errors');
+        if (action === 'execute') setRunOutput(String(message));
+      } else if (action === 'execute' && data.execution_result) {
+        const { stdout = '', stderr = '' } = data.execution_result;
+        // the backend copies known tracebacks into stdout, so do not print them twice
+        setRunOutput(stderr && !stdout.includes(stderr) ? `${stdout}${stdout ? '\n' : ''}${stderr}` : stdout || stderr || '[No output]');
       } else {
         let outputText = '';
         if (data.explanation) outputText += `### Explanation\n\n${data.explanation}\n`;
@@ -270,8 +278,7 @@ const App: React.FC = () => {
       const reader = new FileReader();
       reader.onload = (evt) => {
         const content = typeof evt.target?.result === 'string' ? evt.target.result : '';
-        setOutput(content);
-        setActiveTab('output');
+        setRunOutput(`Dataset Preview (${file.name}):\n\n${content.slice(0, 1000)}`);
       };
       reader.readAsText(file);
     }
@@ -305,47 +312,69 @@ const App: React.FC = () => {
     setChatInput('');
     const toastId = toast.loading('Generating...');
     try {
-      const fullPrompt = `${prompt}\n\nHere is the code to analyze:\n\n${code}`;
-      const response = await fetch('http://localhost:11434/api/generate', {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: fullPrompt, model: 'deepseek-coder-v2:16b', stream: true })
+        body: JSON.stringify({ message: prompt, code })
       });
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || data.detail || `Chat failed (${response.status})`);
+      }
       if (!response.body) throw new Error('No response body');
       let aiMsg = { id: uuidv4(), role: 'ai' as 'ai', content: '' };
       setChatMessages((msgs) => [...msgs, aiMsg]);
       const reader = response.body.getReader();
+      const decoder = new TextDecoder();
       let done = false;
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
         if (value) {
-          const chunk = new TextDecoder().decode(value);
-          for (const line of chunk.split('\n')) {
-            if (!line.trim()) continue;
-            try {
-              const data = JSON.parse(line);
-              if (data.response) {
-                aiMsg = { ...aiMsg, content: aiMsg.content + data.response };
-                setChatMessages((msgs) => msgs.map((m) => m.id === aiMsg.id ? aiMsg : m));
-              }
-            } catch (e) {}
-          }
+          aiMsg = { ...aiMsg, content: aiMsg.content + decoder.decode(value, { stream: true }) };
+          setChatMessages((msgs) => msgs.map((m) => m.id === aiMsg.id ? aiMsg : m));
         }
       }
       toast.success('Done!', { id: toastId });
       setChatLoading(false);
     } catch (err: any) {
-      toast.error('Failed!', { id: toastId });
+      toast.error(err.message || 'Failed!', { id: toastId });
+      setChatMessages((msgs) => [...msgs, { id: uuidv4(), role: 'ai' as 'ai', content: `Error: ${err.message || 'chat failed'}` }]);
       setChatLoading(false);
     }
   }, [setChatLoading, setChatMessages, setChatInput, code]);
 
   const handleRun = useCallback(() => {
-    if (code.trim()) {
-      sendPromptToAI(code);
+    if (code.trim()) handleAction('execute');
+  }, [code, handleAction]);
+
+  const handleReset = useCallback(() => {
+    const fresh = DEFAULT_CODE[language];
+    setCode(fresh);
+    setUndoStack([fresh]);
+    setRedoStack([]);
+    setOutput('');
+    setErrors('');
+    setSuggestions('');
+    setRunOutput('');
+    setInputValue('');
+    setActiveTab('output');
+  }, [language, setCode, setUndoStack, setRedoStack]);
+
+  const handleReport = useCallback(async () => {
+    try {
+      const res = await fetch('/api/cache/stats');
+      const s = await res.json();
+      const c = s.cache_summary || {};
+      setRunOutput(
+        ['FixLoop report', '--------------',
+          `Cache entries: ${c.total_entries}`, `Cache hit ratio: ${c.hit_ratio}`, `Cache memory: ${c.memory_usage}`,
+          `Last cache save: ${c.last_save}`, `Server uptime: ${c.uptime}`].join('\n')
+      );
+    } catch (err: any) {
+      setRunOutput('Could not load report: ' + (err.message || 'unknown error'));
     }
-  }, [code, sendPromptToAI]);
+  }, []);
 
   const handleFileUpload = useCallback((content: string, name: string) => {
     setCode(content);
@@ -354,8 +383,7 @@ const App: React.FC = () => {
 
   const handleDatasetUpload = useCallback((content: string, name: string) => {
     setDatasetPreview(content.slice(0, 1000));
-    setOutput(`Dataset Preview (${name}):\n\n${content.slice(0, 1000)}`);
-    setActiveTab('output');
+    setRunOutput(`Dataset Preview (${name}):\n\n${content.slice(0, 1000)}`);
   }, []);
 
   const handleDownload = useCallback(() => {
@@ -363,14 +391,14 @@ const App: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'code.txt';
+    a.download = `code.${{ python: 'py', javascript: 'js', java: 'java', cpp: 'cpp' }[language] || 'txt'}`;
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }, 100);
-  }, [code]);
+  }, [code, language]);
 
   const handleTemplateClick = useCallback((template: string) => {
     setChatInput(template);
@@ -403,9 +431,12 @@ const App: React.FC = () => {
               onHint={() => handleAction('hint')}
               onFix={() => handleAction('fix')}
               onExecute={handleRun}
+              onReport={handleReport}
+              onReset={handleReset}
               onApplyOptimized={handleApplyOptimized}
               onApplyFixed={handleApplyFixed}
             />
+            {showInput && <InputSection value={inputValue} onChange={setInputValue} />}
             <Editor
               value={code}
               language={language}

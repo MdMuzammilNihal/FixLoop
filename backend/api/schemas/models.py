@@ -29,6 +29,10 @@ class CodeRequest(BaseModel):
             return True
         return isinstance(inputs, list) and all(isinstance(i, str) for i in inputs)
 
+class ChatRequest(BaseModel):
+    message: str
+    code: Optional[str] = None
+
 class CodeResponse(BaseModel):
     original_code: str
     processed_code: Optional[str] = None

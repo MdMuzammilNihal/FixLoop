@@ -44,3 +44,6 @@ backend/*.png
 frontend-react/dist/
 frontend-react/src/**/*.js
 frontend-react/tsconfig.tsbuildinfo
+
+# Local notes shared between Claude sessions
+CLAUDE.md

@@ -15,6 +15,8 @@ interface ToolbarProps {
   onHint: () => void;
   onFix: () => void;
   onExecute: () => void;
+  onReport: () => void;
+  onReset: () => void;
   onApplyOptimized?: () => void;
   onApplyFixed?: () => void;
 }
@@ -33,6 +35,8 @@ const Toolbar: React.FC<ToolbarProps> = ({
   onHint,
   onFix,
   onExecute,
+  onReport,
+  onReset,
   onApplyOptimized,
   onApplyFixed
 }) => {
@@ -82,7 +86,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <div className="toolbar-label">Execute</div>
         </div>
         <div className="toolbar-btn" title="Show Evaluation Report">
-          <button className="btn btn-outline-secondary" aria-label="Show Evaluation Report">
+          <button className="btn btn-outline-secondary" aria-label="Show Evaluation Report" onClick={onReport}>
             <i className="bi bi-file-earmark-text" aria-hidden="true"></i>
           </button>
           <div className="toolbar-label">Report</div>
@@ -107,7 +111,7 @@ const Toolbar: React.FC<ToolbarProps> = ({
           <div className="toolbar-label">Redo</div>
         </div>
         <div className="toolbar-btn" title="Reset Editor and State">
-          <button className="btn btn-sm btn-danger ms-2" aria-label="Reset editor and state">
+          <button className="btn btn-sm btn-danger ms-2" aria-label="Reset editor and state" onClick={onReset}>
             <i className="bi bi-x-circle" aria-hidden="true"></i>
           </button>
           <div className="toolbar-label">Reset</div>

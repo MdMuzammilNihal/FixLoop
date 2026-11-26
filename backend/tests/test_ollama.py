@@ -16,7 +16,7 @@ import psutil
 
 # Configuration
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-REQUIRED_MODELS = ["llama3", "codellama"]
+REQUIRED_MODELS = ["llama3"]
 
 def print_header(text: str) -> None:
     """Print a formatted header."""
@@ -138,13 +138,13 @@ async def run_tests() -> None:
     print_header("Test Summary")
     if not ollama_available:
         print("Ollama is not available. Please install and start Ollama.")
-        print("See OLLAMA_SETUP.md for installation instructions.")
+        print("See docs/OLLAMA_SETUP.md for installation instructions.")
     elif missing_models:
         print("Ollama is running, but some required models are missing.")
         print("Install the missing models and run this test again.")
     else:
         print("All tests passed! FixLoop should work correctly with Ollama.")
-        print("Run 'python fixloop.py' to start the application.")
+        print("Start it with: python -m uvicorn backend.main:app --port 8000")
 
 if __name__ == "__main__":
     import asyncio

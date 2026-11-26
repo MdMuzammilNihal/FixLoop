@@ -1,4 +1,4 @@
-from backend.api.schemas.models import CodeRequest, CodeResponse, BatchCodeRequest, ContextAwareFixRequest
+from backend.api.schemas.models import CodeRequest, CodeResponse, BatchCodeRequest, ContextAwareFixRequest, ChatRequest
 from fastapi.responses import JSONResponse, StreamingResponse
 import time
 import json
@@ -15,7 +15,6 @@ from backend.api.services.logic_services import (
     check_ollama_available,
     ollama_stream,
     OLLAMA_MODEL,
-    OLLAMA_CODE_MODEL,
 )
 
 # process_code
@@ -242,7 +241,7 @@ async def process_code_stream(request: CodeRequest):
                 }
             )
         prompt = build_prompt(request.action, request.code, request.language)
-        model = OLLAMA_CODE_MODEL if request.action in ["analyze", "fix", "optimize"] else OLLAMA_MODEL
+        model = OLLAMA_MODEL
         max_tokens = estimate_max_tokens(prompt)
         async def event_generator():
             try:
@@ -342,3 +341,26 @@ async def fix_code_with_context(request: ContextAwareFixRequest):
         verified=result.get("verified"),
         processing_time=time.time() - start_time,
     )
+
+
+# process_chat: free-form question about the user's code, streamed as plain text
+async def process_chat(request: ChatRequest):
+    if not request.message.strip():
+        return JSONResponse(status_code=400, content={"error": "Message cannot be empty"})
+    if not await check_ollama_available():
+        return JSONResponse(
+            status_code=503,
+            content={"error": "Ollama service is not available. Please ensure it is running at the configured OLLAMA_BASE_URL."},
+        )
+    prompt = request.message.strip()
+    if request.code and request.code.strip():
+        prompt += f"\n\nHere is the code:\n\n```\n{request.code}\n```"
+
+    async def text_generator():
+        try:
+            async for chunk in ollama_stream(prompt, OLLAMA_MODEL, estimate_max_tokens(prompt)):
+                yield chunk
+        except Exception as e:
+            yield f"\n[Error: {e}]"
+
+    return StreamingResponse(text_generator(), media_type="text/plain; charset=utf-8")

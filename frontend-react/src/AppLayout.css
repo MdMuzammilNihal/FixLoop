@@ -147,3 +147,6 @@
     display: none;
   }
 } 
+/* Light theme: invert the dark palette; keep the code editor and terminals dark */
+html.theme-light { filter: invert(1) hue-rotate(180deg); }
+html.theme-light .monaco-editor, .theme-light .xterm { filter: invert(1) hue-rotate(180deg); }

@@ -41,22 +41,13 @@ Ollama is an open-source tool that allows you to run Large Language Models (LLMs
 
 ## Downloading Required Models
 
-FixLoop uses two main models:
-
-1. **llama3**: For general language understanding
-2. **codellama**: Specifically optimized for code understanding and generation
-
-To download these models, open a terminal or command prompt and run:
+FixLoop uses one model, **llama3**. To download it, open a terminal or command prompt and run:
 
 ```bash
-# Pull the general model
 ollama pull llama3
-
-# Pull the code-specialized model
-ollama pull codellama
 ```
 
-This may take some time depending on your internet connection, as the models are several gigabytes in size.
+This may take some time depending on your internet connection, as the model is several gigabytes in size.
 
 ## Verifying Installation
 
@@ -67,7 +58,7 @@ To verify that Ollama is running correctly:
    ```bash
    ollama list
    ```
-3. You should see both `llama3` and `codellama` in the list of available models
+3. You should see `llama3` in the list of available models
 
 ## Troubleshooting
 

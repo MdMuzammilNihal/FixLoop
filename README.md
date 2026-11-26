@@ -9,12 +9,11 @@ failure the error is sent back to the model for another attempt, up to 3 tries.
 ## Requirements
 
 - Python 3.10+, Node.js 18+
-- [Ollama](https://ollama.com/download) with `llama3` and `codellama`
+- [Ollama](https://ollama.com/download) with the `llama3` model
 - Docker (optional, for the in-browser Python terminal)
 
 ```bash
 ollama pull llama3
-ollama pull codellama
 ```
 
 ## Run
@@ -45,7 +44,6 @@ Docker (backend + Ollama):
 ```bash
 docker compose -f docker/docker-compose.yml up --build
 docker compose -f docker/docker-compose.yml exec ollama ollama pull llama3
-docker compose -f docker/docker-compose.yml exec ollama ollama pull codellama
 ```
 
 ## API
@@ -64,7 +62,7 @@ docker compose -f docker/docker-compose.yml exec ollama ollama pull codellama
 ## Configuration
 
 Optional environment variables: `OLLAMA_BASE_URL` (`http://localhost:11434`), `OLLAMA_MODEL` (`llama3`),
-`OLLAMA_CODE_MODEL` (`codellama`), `HOST` (`127.0.0.1`), `PORT` (`8000`), `FIXLOOP_CORS_ORIGINS`.
+`FIXLOOP_TEMPERATURE` (`0.2`), `HOST` (`127.0.0.1`), `PORT` (`8000`), `FIXLOOP_CORS_ORIGINS`.
 See `docker/env.example`.
 
 ## Tests and benchmark
